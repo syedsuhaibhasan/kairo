@@ -11,6 +11,13 @@ export class AuthService{
         handleCodeInApp: false,
     };
 
+    async getCurrentUser(){
+        try {
+            return this.auth.currentUser
+        } catch (error) {
+            console.log("Firebase Service :: getCurrentUser :: error", error)
+        }
+    }
 
     async signUp (email, password)  {
         try {
@@ -18,8 +25,7 @@ export class AuthService{
             await sendEmailVerification(userCredential.user, this.actionCodeSettings)
             await this.signOut(this.auth)
         } catch (error) {
-            console.log("Firebase Service :: signUp :: error", error)
-            
+            console.log("Firebase Service :: signUp :: error", error) 
         }
     }
 
@@ -42,5 +48,4 @@ export class AuthService{
 }
 
 const authService = new AuthService();
-
 export default authService;
