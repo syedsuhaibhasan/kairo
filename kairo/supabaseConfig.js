@@ -1,3 +1,5 @@
+// OLD FIREBASE PROJECT CONFIGURATION
+
 // // Import the functions you need from the SDKs you need
 // import { initializeApp } from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
@@ -21,3 +23,11 @@
 // const analytics = getAnalytics(app);
 
 // export default app;
+
+// SHIFTED TO SUPABASE
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+
+export const supabase = createClient(supabaseUrl, supabasePublishableKey)
