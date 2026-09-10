@@ -1,51 +1,88 @@
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendSignInLinkToEmail, sendEmailVerification, signOut } from "firebase/auth"
+import { createClient } from '@supabase/supabase-js'
+import conf from '../../conf/conf'   
+export class AuthService {
+    client;
 
-export class AuthService{
-    auth;
-    constructor() {
-        this.auth = getAuth()
+    constructor(){
+        this.client = createClient(conf.projectUrl, conf.publishableKey)
     }
 
-    actionCodeSettings = {
-        url: 'http://localhost:5173/',
-        handleCodeInApp: false,
-    };
+    async signInWithGoogle(){
+        try {
+            const { data, error } = await this.client.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    emailRedirectTo: 'http://localhost:5173/'
+                }
+            })
+            return data;
+        } catch (error) {
+            console.log("Supabase service :: OAuth Failure :: signInWithGoogle :: ", error);
+        }
+    }
+    
+    async createUser(email, password, username){
+        try{
+            const {data , error} = await this.client.auth.signUp({
+                email: email,
+                password: password,
+                options:{
+                    emailRedirectTo: 'http://localhost:5173/'
+                },
+                data: {
+                    username: username
+                }
+            });
+            
+            if(error){
+                throw error;
+            }
+
+            if(!data.user.email_confirmed_at){
+                await this.client.auth.signOut()
+                throw new Error("Please confirm your email before signing in.")
+            }
+
+
+        }catch(error){
+            console.log("Supabase service :: createUser :: ", error);
+        }
+    }
+
+    async loginUser(email, password){
+        try {
+            const { data, error } = await this.client.auth.signInWithPassword({
+                email: email,
+                password: password,
+            })
+            return data;
+        } catch (error) {
+            console.log("Supabase service :: loginUser :: ", error);
+        }
+    }
+
+    async logoutUser(){
+        try {
+            if(this.client.auth.getSession().session.user){
+                const { error } = await this.client.auth.signOut()
+                if(error){
+                    throw error;
+                }
+            }
+        } catch (error) {
+            console.log("Supabase service :: logoutUser :: ", error);
+        }
+    }
 
     async getCurrentUser(){
         try {
-            return this.auth.currentUser
-        } catch (error) {
-            console.log("Firebase Service :: getCurrentUser :: error", error)
-        }
-    }
-
-    async signUp (email, password)  {
-        try {
-            const userCredential = await createUserWithEmailAndPassword(this.auth, email, password)
-            await sendEmailVerification(userCredential.user, this.actionCodeSettings)
-            await this.signOut(this.auth)
-        } catch (error) {
-            console.log("Firebase Service :: signUp :: error", error) 
-        }
-    }
-
-    async login(email, password){
-        try {
-            const userCredential = await signInWithEmailAndPassword(this.auth, email, password)
-            const user = userCredential.user;
-
-            if (!user.emailVerified) {
-                await this.signOut(this.auth);
-                throw new Error("Please verify your email address before logging in.");
+            const { data, error } = await this.client.auth.getSession()
+            if(error){
+                throw error;
             }
-
-            return user;
+            return data.session.user;
         } catch (error) {
-            console.log("Firebase Service :: login :: error", error);
-            
+            console.log("Supabase service :: getCurrentUser :: ", error);
         }
     }
 }
-
-const authService = new AuthService();
-export default authService;
