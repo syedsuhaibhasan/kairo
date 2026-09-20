@@ -21,17 +21,18 @@ export class AuthService {
         }
     }
     
-    async createUser(email, password, username){
+    async createUser(email, password){
         try{
             const {data , error} = await this.client.auth.signUp({
                 email: email,
                 password: password,
                 options:{
                     emailRedirectTo: 'http://localhost:5173/'
-                },
-                data: {
-                    username: username
                 }
+                //,
+                // data: {
+                //     username: username
+                // }
             });
             
             if(error){
