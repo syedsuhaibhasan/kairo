@@ -21,6 +21,24 @@ export class AuthService {
             console.log("Supabase service :: OAuth Failure :: signInWithGoogle :: ", error);
         }
     }
+
+    async signInWithGoogleToken(token){
+        try {
+            const { data, error } = await this.client.auth.signInWithIdToken({
+                provider: 'google',
+                token
+            })
+
+            if(error){
+                throw error;
+            }
+
+            return data;
+        } catch (error) {
+            console.log("Supabase service :: Google ID Token Failure :: signInWithGoogleToken :: ", error);
+            throw error;
+        }
+    }
     
     async createUser(email, password){
         try{
