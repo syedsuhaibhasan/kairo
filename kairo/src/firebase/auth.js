@@ -5,6 +5,7 @@ export class AuthService {
 
     constructor(){
         this.client = createClient(conf.projectUrl, conf.publishableKey)
+        this.signInWithGoogle = this.signInWithGoogle.bind(this);
     }
 
     async signInWithGoogle(){
