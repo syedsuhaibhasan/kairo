@@ -5,14 +5,29 @@ import authService from '../firebase/auth';
 import {login as setUser} from  '../store/authSlice';
 import {useDispatch} from 'react-redux';
 import {useForm} from 'react-hook-form';
-
+import conf from '../../conf/conf' 
 
 function Signup(){
     const [error, setError] = useState('');
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {register, handleSubmit} = useForm();
+    const googleClientId = conf.googleClientId;
 
+    const handleSignInWithGoogle = async (response) => {
+        try {
+            const { data, error } = await authService.signInWithGoogleToken(response.credential);
+            if (error) {
+                throw error;
+            }
+            if (data) {
+                dispatch(setUser(data.user));
+                navigate('/');
+            }
+        } catch (error) {
+            console.error("Error signing in with Google:", error);
+        }
+    };
 
     const signup = async (data) => {
         setError('')
@@ -81,13 +96,35 @@ function Signup(){
 
                         <button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 ">Sign Up</button>
 
-                        <button
+                        {/* <button
                             type="button"
                             onClick={authService.signInWithGoogle}
                             className="w-full bg-red-500 hover:bg-red-700"
                         >
                             Continue with Google
-                        </button>
+                        </button> */}
+
+                        <div
+                        id="g_id_onload"
+                        data-client_id= {googleClientId}
+                        data-context="signin"
+                        data-ux_mode="popup"
+                        data-callback="handleSignInWithGoogle"
+                        data-nonce=""
+                        data-auto_select="true"
+                        data-itp_support="true"
+                        data-use_fedcm_for_prompt="true"
+                        ></div>
+
+                        <div
+                        class="g_id_signin"
+                        data-type="standard"
+                        data-shape="pill"
+                        data-theme="outline"
+                        data-text="signin_with"
+                        data-size="large"
+                        data-logo_alignment="left"
+                        ></div>
                     </div>
                 </form>
             </div>
