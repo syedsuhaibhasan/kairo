@@ -1,16 +1,32 @@
 import {useDispatch} from 'react-redux';
-import {useState, useEffect} from 'react';
+import {useCallback, useState} from 'react';
 import {Input} from './index';
 import {useNavigate, Link} from 'react-router-dom';
 import {useForm} from 'react-hook-form'
 import authService from '../firebase/auth'
 import {login as setUser} from '../store/authSlice'
+import SignInWithGoogleButton from '../firebase/signWithGoogleBtnConfig'
 
 function Login(){
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {register, handleSubmit} = useForm();
-    const [error, setError] = useState('');
+    const [, setError] = useState('');
+
+    const handleSignInWithGoogle = useCallback(async (response) => {
+        try {
+            const { data, error } = await authService.signInWithGoogleToken(response.credential);
+            if (error) {
+                throw error;
+            }
+            if (data) {
+                dispatch(setUser(data.user));
+                navigate('/');
+            }
+        } catch (error) {
+            console.error('Error signing in with Google:', error);
+        }
+    }, [dispatch, navigate]);
 
     const login = async (data) => {
         setError('')
@@ -53,7 +69,7 @@ function Login(){
                     {...register("email", {
                         required: true,
                         validate: (value) => {
-                            const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || "Please enter a valid email address";
+                            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || "Please enter a valid email address";
                         }})
                     }
                 />
@@ -74,6 +90,8 @@ function Login(){
                 <button type="submit" className="w-full py-3 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200">
                     Login
                 </button>
+
+                <SignInWithGoogleButton onCredential={handleSignInWithGoogle} />
             </div>
         </form>    
       </div>

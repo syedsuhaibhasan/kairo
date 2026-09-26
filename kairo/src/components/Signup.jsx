@@ -1,20 +1,19 @@
 import {Input} from './index';
 import {useNavigate, Link} from 'react-router-dom';
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import authService from '../firebase/auth';
 import {login as setUser} from  '../store/authSlice';
 import {useDispatch} from 'react-redux';
 import {useForm} from 'react-hook-form';
-import conf from '../../conf/conf' 
+import SignInWithGoogleButton from '../firebase/signWithGoogleBtnConfig'
 
 function Signup(){
     const [error, setError] = useState('');
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {register, handleSubmit} = useForm();
-    const googleClientId = conf.googleClientId;
 
-    const handleSignInWithGoogle = async (response) => {
+    const handleSignInWithGoogle = useCallback(async (response) => {
         try {
             const { data, error } = await authService.signInWithGoogleToken(response.credential);
             if (error) {
@@ -27,7 +26,7 @@ function Signup(){
         } catch (error) {
             console.error("Error signing in with Google:", error);
         }
-    };
+    }, [dispatch, navigate]);
 
     const signup = async (data) => {
         setError('')
@@ -104,27 +103,7 @@ function Signup(){
                             Continue with Google
                         </button> */}
 
-                        <div
-                        id="g_id_onload"
-                        data-client_id= {googleClientId}
-                        data-context="signin"
-                        data-ux_mode="popup"
-                        data-callback="handleSignInWithGoogle"
-                        data-nonce=""
-                        data-auto_select="true"
-                        data-itp_support="true"
-                        data-use_fedcm_for_prompt="true"
-                        ></div>
-
-                        <div
-                        class="g_id_signin"
-                        data-type="standard"
-                        data-shape="pill"
-                        data-theme="outline"
-                        data-text="signin_with"
-                        data-size="large"
-                        data-logo_alignment="left"
-                        ></div>
+                        <SignInWithGoogleButton onCredential={handleSignInWithGoogle} />
                     </div>
                 </form>
             </div>
