@@ -22,7 +22,7 @@ function LoginView({
 
   return (
     <AuthBackground>
-      <main className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl flex-col px-5 py-8 sm:px-8 sm:py-10">
+      <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col px-5 py-8 sm:px-8 sm:py-10">
         
 
         <div className="flex flex-1 items-center justify-center py-10">
@@ -102,13 +102,13 @@ function LoginView({
                     {isLoading ? "Signing in..." : "Sign in"}
                   </Button>
 
-                  <div className="flex items-center gap-3 py-1">
-                    <Separator className="bg-slate-200" />
+                  <div className="flex w-full items-center gap-3 py-1">
+                    <Separator className="flex-1 bg-slate-200" />
                     <span className="text-xs text-slate-400">or</span>
-                    <Separator className="bg-slate-200" />
+                    <Separator className="flex-1 bg-slate-200" />
                   </div>
 
-                  <div className="flex min-h-11 w-full items-center justify-center overflow-hidden rounded-full bg-white shadow-md [&>div]:!w-full [&>div]:!justify-center">
+                  <div className="flex min-h-11 w-full items-center justify-center overflow-hidden">
                     <GoogleButton onCredential={onGoogleCredential} />
                   </div>
                 </form>

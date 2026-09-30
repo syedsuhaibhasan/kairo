@@ -11,19 +11,21 @@ function Login(){
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const {register, handleSubmit} = useForm();
-    const [, setError] = useState('');
+    const [error, setError] = useState('');
 
     const handleSignInWithGoogle = useCallback(async (response) => {
         try {
-            const { data, error } = await authService.signInWithGoogleToken(response.credential);
-            if (error) {
-                throw error;
+            if (!response?.credential) {
+                throw new Error('Google did not return an ID token.');
             }
-            if (data) {
-                dispatch(setUser(data.user));
+
+            const data = await authService.signInWithGoogleToken(response.credential);
+            if (data?.user) {
+                dispatch(setUser({userData: data.user}));
                 navigate('/');
             }
         } catch (error) {
+            setError(error.message);
             console.error('Error signing in with Google:', error);
         }
     }, [dispatch, navigate]);
@@ -50,6 +52,7 @@ function Login(){
         login={login}
         GoogleButton={SignInWithGoogleButton}
         onGoogleCredential={handleSignInWithGoogle}
+        error={error}
       />
     )
 }   

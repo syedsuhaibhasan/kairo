@@ -31,6 +31,7 @@ const SignInWithGoogleButton = forwardRef(({onCredential}, forwardedRef) => {
                 text: 'signin_with',
                 size: 'large',
                 logo_alignment: 'center',
+                width: Math.min(buttonRef.current.clientWidth, 400),
             });
         };
 
