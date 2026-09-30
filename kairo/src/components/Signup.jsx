@@ -6,6 +6,7 @@ import {login as setUser} from  '../store/authSlice';
 import {useDispatch} from 'react-redux';
 import {useForm} from 'react-hook-form';
 import SignInWithGoogleButton from '../firebase/signWithGoogleBtnConfig'
+import { Button as btnShadcn } from '../components/ui/button';
 
 function Signup(){
     const [error, setError] = useState('');
@@ -93,8 +94,8 @@ function Signup(){
                             required: true,
                         })} />
 
-                        <button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 ">Sign Up</button>
-
+                        {/* <button type="submit" className="w-full bg-blue-500 hover:bg-blue-700 ">Sign Up</button> */}
+                        <btnShadcn variant="default">Sign Up</btnShadcn>
                         {/* <button
                             type="button"
                             onClick={authService.signInWithGoogle}

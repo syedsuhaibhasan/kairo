@@ -7,9 +7,7 @@ function App() {
 
   return (
   <>
-    <div className='bg-blue-600'>Header</div>
-      <Outlet />
-    <div className='bg-blue-600'>Footer</div>
+    <Outlet />
   </>
   )
 }
