@@ -1,6 +1,15 @@
 import {forwardRef, useEffect, useRef} from 'react';
 import conf from '../../conf/conf';
 
+let googleInitialized = false;
+let activeCredentialCallback = null;
+
+const handleGoogleCredential = (response) => {
+    if (activeCredentialCallback) {
+        activeCredentialCallback(response);
+    }
+};
+
 const SignInWithGoogleButton = forwardRef(({onCredential}, forwardedRef) => {
     const buttonRef = useRef(null);
 
@@ -20,10 +29,16 @@ const SignInWithGoogleButton = forwardRef(({onCredential}, forwardedRef) => {
                 return;
             }
 
-            window.google.accounts.id.initialize({
-                client_id: googleClientId,
-                callback: onCredential,
-            });
+            activeCredentialCallback = onCredential;
+
+            if (!googleInitialized) {
+                window.google.accounts.id.initialize({
+                    client_id: googleClientId,
+                    callback: handleGoogleCredential,
+                });
+                googleInitialized = true;
+            }
+
             window.google.accounts.id.renderButton(buttonRef.current, {
                 type: 'standard',
                 shape: 'pill',
@@ -39,6 +54,10 @@ const SignInWithGoogleButton = forwardRef(({onCredential}, forwardedRef) => {
 
         return () => {
             window.clearTimeout(retryTimeout);
+
+            if (activeCredentialCallback === onCredential) {
+                activeCredentialCallback = null;
+            }
         };
     }, [onCredential]);
 
