@@ -1,7 +1,7 @@
 import { supabase } from '../../supabaseConfig'
 
 
-export class AuthService {
+export class StorageAndDBService {
     client;
 
     constructor(client){
@@ -45,5 +45,39 @@ export class AuthService {
         }
     }
 
+    async getPreviousConversations(){
+        try{
+            const {data, error} = await this.client.from('conversations')
+                                                   .select('title')
+            if(!data?.title){
+                throw new Error("No previous conversations found");
+            }else{
+                const conversations = data.map(conversation => conversation.title)
+                return conversations;
+            }
+        }catch(error){
+            console.log("Supabase service :: getPreviousConversations :: error :: ", error);
+        }
+    }
     
+    async getChatHistory(conversationId){
+        try{
+            const {data, error} = await this.client.from('messages')
+                                                    .select('content, role')
+                                                    .eq('conversation_id', conversationId)
+                                                    .order('created_at', { ascending: false })
+                                                    .limit(50);
+
+            if(!data){
+                throw new Error("No chat history found for this conversation");
+            }else{
+                return data.reverse(); // Reverse the order to get the latest messages first
+            }
+        }catch(error){
+            console.log("Supabase service :: getChatHistory :: error :: ", error);
+        }
+    }
 }
+
+const config = new StorageAndDBService(supabase);
+export default config;
