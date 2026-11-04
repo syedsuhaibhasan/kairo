@@ -45,18 +45,18 @@ export class StorageAndDBService {
         }
     }
 
-    async getPreviousConversations(){
-        try{
-            const {data, error} = await this.client.from('conversations')
-                                                   .select('title')
-            if(!data?.title){
-                throw new Error("No previous conversations found");
-            }else{
-                const conversations = data.map(conversation => conversation.title)
-                return conversations;
-            }
-        }catch(error){
-            console.log("Supabase service :: getPreviousConversations :: error :: ", error);
+    async getPreviousConversations() {
+    try {
+        const { data, error } = await this.client
+            .from('conversations')
+            .select('conversation_id, title')
+            .order('updated_at', { ascending: false });
+
+        if (error) throw error;
+        return data ?? [];
+    } catch (error) {
+        console.log("Supabase service :: getPreviousConversations :: error :: ", error);
+        return [];
         }
     }
     
