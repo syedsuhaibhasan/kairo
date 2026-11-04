@@ -1,6 +1,7 @@
 import {config as DBService} from '../supabase/config';
 import { useNavigate } from 'react-router-dom';
 import {useState, useEffect} from 'react';
+import authService from '@/supabase/auth';
 
 
 function PreviousConversations(){
@@ -133,7 +134,7 @@ function PreviousConversations(){
 
             <div className="flex items-center gap-2 border-t border-[#F0DCCB] pt-3.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FDE0C8] text-sm text-[#7A2E05]">
-                    U
+                    {authService.getCurrentUser}
                 </div>
             </div>
         </aside>

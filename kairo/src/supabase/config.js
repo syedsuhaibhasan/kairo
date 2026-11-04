@@ -60,6 +60,19 @@ export class StorageAndDBService {
         }
     }
     
+    async newChat(title) {
+    try {
+        const { data, error } = await this.client
+            .from('conversations')
+            .insert({ title })
+            .select('conversation_id, title');   // returns an array of the inserted rows
+        if (error) throw error;
+        return data;
+    } catch (error) {
+        console.log("Supabase service :: newChat :: error :: ", error);
+        }
+    }
+
     async getChatHistory(conversationId){
         try{
             const {data, error} = await this.client.from('messages')
