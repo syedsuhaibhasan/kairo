@@ -1,63 +1,102 @@
-import {config as DBService} from '../supabase/config';
-import { useNavigate } from 'react-router-dom';
-import {useState, useEffect} from 'react';
+import DBService from '../supabase/config';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import authService from '@/supabase/auth';
 
-
-function PreviousConversations(){
+function PreviousConversations() {
     const [conversations, setConversations] = useState([]);
     const [newTitle, setNewTitle] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState('');
+    const reduxUser = useSelector((state) => state.auth?.userData);
+    const [currentUser, setCurrentUser] = useState(reduxUser || null);
+
     const navigate = useNavigate();
+    const { conversation_id } = useParams();
 
     useEffect(() => {
-        const fetchConversations = async () => {
-             try{
-            const fetchedConversations = await DBService.getPreviousConversations();
-            if(fetchedConversations){ // Check if fetchedConversations is not null or undefined
-                setConversations(fetchedConversations);
-            }
-        }catch(error){
-            console.log("PreviousConversations :: useEffect :: error :: ", error);
+        if (reduxUser) {
+            setCurrentUser(reduxUser);
         }
-    };
-    fetchConversations();
-    }, [conversations])
+    }, [reduxUser]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchUser = async () => {
+            try {
+                const user = await authService.getCurrentUser();
+                if (isMounted && user) {
+                    setCurrentUser(user);
+                }
+            } catch (error) {
+                console.log("PreviousConversations :: fetchUser error :: ", error);
+            }
+        };
+        fetchUser();
+        return () => { isMounted = false; };
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchConversations = async () => {
+            try {
+                const fetchedConversations = await DBService.getPreviousConversations();
+                if (isMounted && fetchedConversations) {
+                    setConversations(fetchedConversations);
+                }
+            } catch (error) {
+                console.log("PreviousConversations :: useEffect :: error :: ", error);
+            }
+        };
+        fetchConversations();
+        return () => { isMounted = false; };
+    }, []);
 
     const cancelCreate = () => {
         setIsCreating(false);
         setNewTitle('');
         setCreateError('');
-    }
+    };
 
-    const handleCreateNewChat = async(e) => {
-        e.preventDefault(); 
+    const handleCreateNewChat = async (e) => {
+        e.preventDefault();
         const title = newTitle.trim();
 
-        if(!title || isSubmittting) return;
+        if (!title || isSubmitting) return;
 
-        setIsSubmittting(true);
-        try{
+        setIsSubmitting(true);
+        try {
             setCreateError('');
             const data = await DBService.newChat(title);
             const created = data?.[0];
 
-            if(!created?.conversation_id){
-                setError("Failed to create new chat. Please try again.");
+            if (!created?.conversation_id) {
+                setCreateError("Failed to create new chat. Please try again.");
                 return;
             }
 
-            setConversations(prev => [...prev, created]);
+            setConversations(prev => [created, ...prev]);
             cancelCreate();
             navigate(`/chat/${created.conversation_id}`);
-        }finally{
-            setIsSubmittting(false);
+        } catch (err) {
+            console.log("PreviousConversations :: handleCreateNewChat error :: ", err);
+            setCreateError("Failed to create new chat. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
-    }
+    };
 
-    return(
+    const userObj = currentUser?.userData || currentUser;
+    const userName =
+        userObj?.user_metadata?.full_name ||
+        userObj?.user_metadata?.name ||
+        (userObj?.email ? userObj.email.split('@')[0] : '') ||
+        'User';
+    const userInitial = userName ? userName.charAt(0).toUpperCase() : 'U';
+
+    return (
         <aside className="fixed inset-y-4 left-4 hidden w-[264px] flex-col gap-4 rounded-3xl border border-white/80 bg-white/60 p-[18px] shadow-xl shadow-orange-950/10 backdrop-blur md:flex">
             <div className="flex items-center gap-2">
                 <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#ff6b0f] font-serif text-lg text-white">
@@ -72,32 +111,31 @@ function PreviousConversations(){
                     <input
                         id="new-chat-title"
                         type="text"
-                        autoFocus                                   // cursor goes straight into the input
+                        autoFocus
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Escape') cancelCreate(); }} 
-                        maxLength={255}                             
+                        onKeyDown={(e) => { if (e.key === 'Escape') cancelCreate(); }}
+                        maxLength={255}
                         disabled={isSubmitting}
                         placeholder="Name your chat"
                         className="w-full rounded-[14px] border border-[#F0DCCB] bg-white/90 px-3 py-3 text-sm text-[#2B1810] placeholder:text-[#7D5F4E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
                     />
-                    {/* role="alert" makes screen readers announce the error immediately */}
                     {createError && (
                         <p role="alert" className="text-xs text-[#A83A04]">{createError}</p>
                     )}
                     <div className="flex gap-2">
                         <button
                             type="submit"
-                            disabled={!newTitle.trim() || isSubmitting}  // can't submit an empty name or submit twice
-                            className="flex-1 rounded-xl bg-[#ff6b0f] py-2 text-sm font-medium text-white disabled:opacity-60"
+                            disabled={!newTitle.trim() || isSubmitting}
+                            className="flex-1 rounded-xl bg-[#ff6b0f] py-2 text-sm font-medium text-white disabled:opacity-60 cursor-pointer"
                         >
                             {isSubmitting ? 'Creating...' : 'Create'}
                         </button>
                         <button
-                            type="button"                            // type="button" so it doesn't submit the form
+                            type="button"
                             onClick={cancelCreate}
                             disabled={isSubmitting}
-                            className="rounded-xl px-3 py-2 text-sm text-[#2B1810] hover:bg-white/85"
+                            className="rounded-xl px-3 py-2 text-sm text-[#2B1810] hover:bg-white/85 cursor-pointer disabled:opacity-60"
                         >
                             Cancel
                         </button>
@@ -106,8 +144,11 @@ function PreviousConversations(){
             ) : (
                 <button
                     type="button"
-                    className="w-full rounded-[14px] bg-[#ff6b0f] py-3 text-sm font-medium text-white"
-                    onClick={() => setIsCreating(true)}              // opens the name input
+                    className="w-full rounded-[14px] bg-[#ff6b0f] py-3 text-sm font-medium text-white hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer"
+                    onClick={() => {
+                        setIsCreating(true);
+                        setIsSubmitting(false);
+                    }}
                 >
                     New chat
                 </button>
@@ -118,25 +159,44 @@ function PreviousConversations(){
                     <p className="py-3 text-sm text-[#6F4636]">No conversations yet</p>
                 ) : (
                     <div className="space-y-1">
-                        {conversations.map((conversation) => (
-                            <button
-                                key={conversation.conversation_id}
-                                type="button"
-                                className="w-full truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] hover:bg-white/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
-                                onClick={() => navigate(`/chat/${conversation.conversation_id}`)}
-                            >
-                                {conversation.title || 'New chat'}
-                            </button>
-                        ))}
+                        {conversations.map((conversation) => {
+                            const isActive = conversation.conversation_id === conversation_id;
+                            return (
+                                <button
+                                    key={conversation.conversation_id}
+                                    type="button"
+                                    aria-current={isActive ? 'page' : undefined}
+                                    className={`w-full truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${
+                                        isActive ? 'bg-white font-medium shadow-sm' : 'hover:bg-white/85'
+                                    }`}
+                                    onClick={() => navigate(`/chat/${conversation.conversation_id}`)}
+                                >
+                                    {conversation.title || 'New chat'}
+                                </button>
+                            );
+                        })}
                     </div>
                 )}
             </nav>
 
-            <div className="flex items-center gap-2 border-t border-[#F0DCCB] pt-3.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FDE0C8] text-sm text-[#7A2E05]">
-                    {authService.getCurrentUser}
-                </div>
+            <div className="flex items-center gap-2.5 border-t border-[#F0DCCB] pt-3.5 px-1 min-w-0">
+                {userAvatar ? (
+                    <img
+                        src={userAvatar}
+                        alt={userName}
+                        className="h-8 w-8 shrink-0 rounded-full object-cover"
+                    />
+                ) : (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">
+                        {userInitial}
+                    </div>
+                )}
+                <span className="truncate text-sm font-medium text-[#2B1810]" title={userName}>
+                    {userName}
+                </span>
             </div>
         </aside>
-    )
+    );
 }
+
+export default PreviousConversations;

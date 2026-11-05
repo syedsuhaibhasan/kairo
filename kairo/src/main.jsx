@@ -7,6 +7,9 @@ import './index.css'
 import App from './App.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/SignUp.jsx'
+import AppLayout from './components/AppLayout.jsx'
+import NewChat from './pages/NewChat.jsx'
+import Chat from './pages/Chat.jsx'
 
 const router = createBrowserRouter([
   {
@@ -20,6 +23,19 @@ const router = createBrowserRouter([
       {
         path: '/signup',
         element: <Signup />
+      },
+      {
+        element: <AppLayout />,
+        children: [
+          {
+            path: '/new-chat',
+            element: <NewChat />
+          },
+          {
+            path: '/chat/:conversation_id',
+            element: <Chat />
+          }
+        ]
       }
     ]
   }
