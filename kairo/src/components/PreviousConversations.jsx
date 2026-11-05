@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import authService from '@/supabase/auth';
+import { LogOut } from 'lucide-react';
 
 function PreviousConversations() {
     const [conversations, setConversations] = useState([]);
@@ -10,6 +11,7 @@ function PreviousConversations() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [createError, setCreateError] = useState('');
+    const [showLogout, setShowLogout] = useState(false);
     const reduxUser = useSelector((state) => state.auth?.userData);
     const [currentUser, setCurrentUser] = useState(reduxUser || null);
 
@@ -58,6 +60,15 @@ function PreviousConversations() {
         setIsCreating(false);
         setNewTitle('');
         setCreateError('');
+    };
+
+    const handleLogout = async () => {
+        try {
+            await authService.logoutUser();
+        } catch (error) {
+            console.log("PreviousConversations :: logout error :: ", error);
+        }
+        navigate('/login');
     };
 
     const handleCreateNewChat = async (e) => {
@@ -178,15 +189,32 @@ function PreviousConversations() {
                 )}
             </nav>
 
-            <div className="flex items-center gap-2.5 border-t border-[#F0DCCB] pt-3.5 px-1 min-w-0">
-                {
+            <div className="relative border-t border-[#F0DCCB] pt-3.5 px-1">
+                {showLogout && (
+                    <div className="absolute bottom-full left-1 right-1 mb-2">
+                        <button
+                            type="button"
+                            onClick={handleLogout}
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-[#F0DCCB] py-2 text-sm font-medium text-[#A83A04] shadow-md shadow-orange-950/5 hover:bg-[#FFF4EC] transition-colors cursor-pointer"
+                        >
+                            <LogOut size={16} />
+                            Log out
+                        </button>
+                    </div>
+                )}
+
+                <button
+                    type="button"
+                    onClick={() => setShowLogout((prev) => !prev)}
+                    className="flex w-full items-center gap-2.5 min-w-0 text-left hover:bg-white/60 rounded-xl p-1 transition-colors cursor-pointer"
+                >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">
                         {userInitial}
                     </div>
-                }
-                <span className="truncate text-sm font-medium text-[#2B1810]" title={userName}>
-                    {userName}
-                </span>
+                    <span className="truncate text-sm font-medium text-[#2B1810]" title={userName}>
+                        {userName}
+                    </span>
+                </button>
             </div>
         </aside>
     );
