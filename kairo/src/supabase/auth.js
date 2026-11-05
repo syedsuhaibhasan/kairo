@@ -83,11 +83,9 @@ export class AuthService {
 
     async logoutUser() {
         try {
-            if (this.client.auth.getSession().session.user) {
-                const { error } = await this.client.auth.signOut()
-                if (error) {
-                    throw error;
-                }
+            const { error } = await this.client.auth.signOut()
+            if (error) {
+                throw error;
             }
         } catch (error) {
             console.log("Supabase service :: logoutUser :: ", error);
