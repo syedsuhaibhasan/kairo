@@ -166,9 +166,8 @@ function PreviousConversations() {
                                     key={conversation.conversation_id}
                                     type="button"
                                     aria-current={isActive ? 'page' : undefined}
-                                    className={`w-full truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${
-                                        isActive ? 'bg-white font-medium shadow-sm' : 'hover:bg-white/85'
-                                    }`}
+                                    className={`w-full truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${isActive ? 'bg-white font-medium shadow-sm' : 'hover:bg-white/85'
+                                        }`}
                                     onClick={() => navigate(`/chat/${conversation.conversation_id}`)}
                                 >
                                     {conversation.title || 'New chat'}
@@ -180,17 +179,11 @@ function PreviousConversations() {
             </nav>
 
             <div className="flex items-center gap-2.5 border-t border-[#F0DCCB] pt-3.5 px-1 min-w-0">
-                {userAvatar ? (
-                    <img
-                        src={userAvatar}
-                        alt={userName}
-                        className="h-8 w-8 shrink-0 rounded-full object-cover"
-                    />
-                ) : (
+                {
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">
                         {userInitial}
                     </div>
-                )}
+                }
                 <span className="truncate text-sm font-medium text-[#2B1810]" title={userName}>
                     {userName}
                 </span>
