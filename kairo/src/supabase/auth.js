@@ -3,12 +3,12 @@ import { supabase } from '../../supabaseConfig'
 export class AuthService {
     client;
 
-    constructor(client){
+    constructor(client) {
         this.client = client
         this.signInWithGoogle = this.signInWithGoogle.bind(this);
     }
 
-    async signInWithGoogle(){
+    async signInWithGoogle() {
         try {
             const { data, error } = await this.client.auth.signInWithOAuth({
                 provider: 'google',
@@ -22,14 +22,14 @@ export class AuthService {
         }
     }
 
-    async signInWithGoogleToken(token){
+    async signInWithGoogleToken(token) {
         try {
             const { data, error } = await this.client.auth.signInWithIdToken({
                 provider: 'google',
                 token
             })
 
-            if(error){
+            if (error) {
                 throw error;
             }
 
@@ -39,13 +39,13 @@ export class AuthService {
             throw error;
         }
     }
-    
-    async createUser(email, password){
-        try{
-            const {data , error} = await this.client.auth.signUp({
+
+    async createUser(email, password) {
+        try {
+            const { data, error } = await this.client.auth.signUp({
                 email: email,
                 password: password,
-                options:{
+                options: {
                     emailRedirectTo: 'http://localhost:5173/'
                 }
                 //,
@@ -53,23 +53,23 @@ export class AuthService {
                 //     username: username
                 // }
             });
-            
-            if(error){
+
+            if (error) {
                 throw error;
             }
 
-            if(!data.user.email_confirmed_at){
+            if (!data.user.email_confirmed_at) {
                 await this.client.auth.signOut()
                 throw new Error("Please confirm your email before signing in.")
             }
 
 
-        }catch(error){
+        } catch (error) {
             console.log("Supabase service :: createUser :: ", error);
         }
     }
 
-    async loginUser(email, password){
+    async loginUser(email, password) {
         try {
             const { data, error } = await this.client.auth.signInWithPassword({
                 email: email,
@@ -81,11 +81,11 @@ export class AuthService {
         }
     }
 
-    async logoutUser(){
+    async logoutUser() {
         try {
-            if(this.client.auth.getSession().session.user){
+            if (this.client.auth.getSession().session.user) {
                 const { error } = await this.client.auth.signOut()
-                if(error){
+                if (error) {
                     throw error;
                 }
             }
@@ -94,10 +94,10 @@ export class AuthService {
         }
     }
 
-    async getCurrentUser(){
+    async getCurrentUser() {
         try {
             const { data, error } = await this.client.auth.getSession()
-            if(error){
+            if (error) {
                 throw error;
             }
             return data.session.user;
