@@ -46,7 +46,7 @@ function Login() {
       if (session && session.user) {
         const userData = await authService.getCurrentUser();
         dispatch(setUser(userData));
-        navigate('/');
+        navigate('/new-chat');
       }
     } catch (error) {
       setError(error.message);

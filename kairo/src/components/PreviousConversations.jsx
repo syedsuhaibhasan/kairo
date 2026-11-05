@@ -3,7 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import authService from '@/supabase/auth';
-import { LogOut } from 'lucide-react';
+import { LogOut, MessageSquare } from 'lucide-react';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Badge } from './ui/badge';
 
 function PreviousConversations() {
     const [conversations, setConversations] = useState([]);
@@ -110,16 +114,19 @@ function PreviousConversations() {
     return (
         <aside className="fixed inset-y-4 left-4 hidden w-[264px] flex-col gap-4 rounded-3xl border border-white/80 bg-white/60 p-[18px] shadow-xl shadow-orange-950/10 backdrop-blur md:flex">
             <div className="flex items-center gap-2">
-                <div className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#ff6b0f] font-serif text-lg text-white">
-                    k
-                </div>
+                <Avatar className="h-[30px] w-[30px] shrink-0 rounded-full bg-[#ff6b0f] font-serif text-lg text-white after:border-0 border-0 shadow-sm shadow-orange-900/10">
+                    <AvatarFallback className="bg-[#ff6b0f] text-white font-serif text-lg">k</AvatarFallback>
+                </Avatar>
                 <span className="font-serif text-2xl text-[#2B1810]">Kairo</span>
+                <Badge variant="warm" className="ml-auto text-[10px] tracking-wider uppercase font-semibold px-2 py-0.5 border-[#F0DCCB]">
+                    v2.0
+                </Badge>
             </div>
 
             {isCreating ? (
                 <form onSubmit={handleCreateNewChat} className="flex flex-col gap-2">
                     <label htmlFor="new-chat-title" className="sr-only">Chat name</label>
-                    <input
+                    <Input
                         id="new-chat-title"
                         type="text"
                         autoFocus
@@ -129,45 +136,57 @@ function PreviousConversations() {
                         maxLength={255}
                         disabled={isSubmitting}
                         placeholder="Name your chat"
-                        className="w-full rounded-[14px] border border-[#F0DCCB] bg-white/90 px-3 py-3 text-sm text-[#2B1810] placeholder:text-[#7D5F4E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
+                        className="w-full rounded-[14px] border border-[#F0DCCB] bg-white/90 px-3 py-3 h-auto text-sm text-[#2B1810] placeholder:text-[#7D5F4E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
                     />
                     {createError && (
                         <p role="alert" className="text-xs text-[#A83A04]">{createError}</p>
                     )}
                     <div className="flex gap-2">
-                        <button
+                        <Button
                             type="submit"
                             disabled={!newTitle.trim() || isSubmitting}
-                            className="flex-1 rounded-xl bg-[#ff6b0f] py-2 text-sm font-medium text-white disabled:opacity-60 cursor-pointer"
+                            className="flex-1 rounded-xl bg-[#ff6b0f] py-2 h-auto text-sm font-medium text-white disabled:opacity-60 cursor-pointer"
                         >
                             {isSubmitting ? 'Creating...' : 'Create'}
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="ghost"
                             onClick={cancelCreate}
                             disabled={isSubmitting}
-                            className="rounded-xl px-3 py-2 text-sm text-[#2B1810] hover:bg-white/85 cursor-pointer disabled:opacity-60"
+                            className="rounded-xl px-3 py-2 h-auto text-sm text-[#2B1810] hover:bg-white/85 cursor-pointer disabled:opacity-60"
                         >
                             Cancel
-                        </button>
+                        </Button>
                     </div>
                 </form>
             ) : (
-                <button
+                <Button
                     type="button"
-                    className="w-full rounded-[14px] bg-[#ff6b0f] py-3 text-sm font-medium text-white hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer"
+                    className="w-full rounded-[14px] bg-[#ff6b0f] py-3 h-auto text-sm font-medium text-white hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-md shadow-orange-800/15"
                     onClick={() => {
                         setIsCreating(true);
                         setIsSubmitting(false);
                     }}
                 >
                     New chat
-                </button>
+                </Button>
             )}
 
             <nav aria-label="Previous chats" className="flex-1 overflow-y-auto">
+                <div className="flex items-center justify-between px-1 mb-2">
+                    <span className="text-[11px] font-semibold tracking-wider uppercase text-[#7D5F4E]/80">
+                        Conversations
+                    </span>
+                    {conversations.length > 0 && (
+                        <Badge variant="subtle" className="text-[10px] px-1.5 py-0 text-[#7D5F4E]">
+                            {conversations.length}
+                        </Badge>
+                    )}
+                </div>
+
                 {conversations.length === 0 ? (
-                    <p className="py-3 text-sm text-[#6F4636]">No conversations yet</p>
+                    <p className="py-3 text-sm text-[#6F4636] px-1">No conversations yet</p>
                 ) : (
                     <div className="space-y-1">
                         {conversations.map((conversation) => {
@@ -177,11 +196,20 @@ function PreviousConversations() {
                                     key={conversation.conversation_id}
                                     type="button"
                                     aria-current={isActive ? 'page' : undefined}
-                                    className={`w-full truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${isActive ? 'bg-white font-medium shadow-sm' : 'hover:bg-white/85'
-                                        }`}
+                                    className={`w-full flex items-center gap-2 truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${
+                                        isActive
+                                            ? 'bg-white font-medium shadow-sm border border-[#F0DCCB]/60'
+                                            : 'hover:bg-white/85'
+                                    }`}
                                     onClick={() => navigate(`/chat/${conversation.conversation_id}`)}
                                 >
-                                    {conversation.title || 'New chat'}
+                                    <MessageSquare
+                                        size={13}
+                                        className={`shrink-0 ${isActive ? 'text-[#ff6b0f]' : 'text-[#7D5F4E]/60'}`}
+                                    />
+                                    <span className="truncate">
+                                        {conversation.title || 'New chat'}
+                                    </span>
                                 </button>
                             );
                         })}
@@ -191,15 +219,16 @@ function PreviousConversations() {
 
             <div className="relative border-t border-[#F0DCCB] pt-3.5 px-1">
                 {showLogout && (
-                    <div className="absolute bottom-full left-1 right-1 mb-2">
-                        <button
+                    <div className="absolute bottom-full left-1 right-1 mb-2 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                        <Button
                             type="button"
+                            variant="outline"
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-[#F0DCCB] py-2 text-sm font-medium text-[#A83A04] shadow-md shadow-orange-950/5 hover:bg-[#FFF4EC] transition-colors cursor-pointer"
+                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-[#F0DCCB] py-2 h-auto text-sm font-medium text-[#A83A04] shadow-md shadow-orange-950/5 hover:bg-[#FFF4EC] hover:text-[#A83A04] transition-colors cursor-pointer"
                         >
                             <LogOut size={16} />
                             Log out
-                        </button>
+                        </Button>
                     </div>
                 )}
 
@@ -208,9 +237,11 @@ function PreviousConversations() {
                     onClick={() => setShowLogout((prev) => !prev)}
                     className="flex w-full items-center gap-2.5 min-w-0 text-left hover:bg-white/60 rounded-xl p-1 transition-colors cursor-pointer"
                 >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">
-                        {userInitial}
-                    </div>
+                    <Avatar className="h-8 w-8 shrink-0 rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05] after:border-0 border-0">
+                        <AvatarFallback className="bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">
+                            {userInitial}
+                        </AvatarFallback>
+                    </Avatar>
                     <span className="truncate text-sm font-medium text-[#2B1810]" title={userName}>
                         {userName}
                     </span>
