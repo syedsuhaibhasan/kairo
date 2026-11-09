@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import DBService from '../supabase/config'
+import useParams from 'react-router-dom'
 import { Paperclip, ArrowUp } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
 import { Button } from '../components/ui/button'
@@ -9,13 +11,23 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
+  const {conversation_id} = useParams()
 
   const title = 'New chat'
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const fetchMessages = async() => {
+      try {
+        const res = await DBService.getChatHistory(conversation_id)
+        setMessages(res)
+      } catch (error) {
+        console.log("Error fetching messages:: fetchMessages ::", error)
+      }
+    }
+    fetchMessages()
   }, [messages])
 
+  
   const handleInput = useCallback((e) => {
     setInput(e.target.value)
     const ta = e.target
@@ -33,6 +45,8 @@ export default function Chat() {
       textareaRef.current?.form?.requestSubmit()
     }
   }
+
+  bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
 
   return (
     <TooltipProvider delay={200}>
