@@ -90,6 +90,7 @@ export class StorageAndDBService {
             console.log("Supabase service :: getChatHistory :: error :: ", error);
         }
     }
+
 }
 
 const config = new StorageAndDBService(supabase);

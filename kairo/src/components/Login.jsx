@@ -47,6 +47,19 @@ function Login() {
         const userData = await authService.getCurrentUser();
         dispatch(setUser(userData));
         navigate('/new-chat');
+        // testing supabase edge function for API calling
+        // const { data, error } = await supabase.functions.invoke("chat", {
+        //   body: {
+        //     message: "Hello! Introduce yourself as Kairo.",
+        //     history: [],
+        //   },
+        // });
+
+        // if (error) {
+        //   console.error("Chat error:", error);
+        // } else {
+        //   console.log("Kairo:", data.reply);
+        // }
       }
     } catch (error) {
       setError(error.message);

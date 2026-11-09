@@ -7,6 +7,7 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './ui/t
 
 export default function ChatMessage({ message, onRegenerate }) {
   const [copied, setCopied] = useState(false)
+  
 
   if (message.role === 'system') return null
 
