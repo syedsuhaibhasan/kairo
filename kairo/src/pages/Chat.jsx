@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { supabase } from '../../supabaseConfig'
 import DBService from '../supabase/config'
-import useParams from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
 import { Button } from '../components/ui/button'
@@ -11,12 +12,12 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
-  const {conversation_id} = useParams()
+  const { conversation_id } = useParams()
 
   const title = 'New chat'
 
   useEffect(() => {
-    const fetchMessages = async() => {
+    const fetchMessages = async () => {
       try {
         const res = await DBService.getChatHistory(conversation_id)
         setMessages(res)
@@ -25,9 +26,9 @@ export default function Chat() {
       }
     }
     fetchMessages()
-  }, [messages])
+  }, [conversation_id])
 
-  
+
   const handleInput = useCallback((e) => {
     setInput(e.target.value)
     const ta = e.target
@@ -35,8 +36,35 @@ export default function Chat() {
     ta.style.height = `${ta.scrollHeight}px`
   }, [])
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault()
+
+    const userMessage = input.trim()
+    if (!text) return
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: userMessage,
+      },
+    ]);
+    setInput('')
+
+    try {
+      const { data, error } = await supabase.functions.invoke("chat", {
+        body: {
+          conversationId: conversation_id,
+          message: userMessage,
+        },
+      });
+
+      const assistantReply = data.reply
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantReply }]);
+
+    } catch (error) {
+      console.log("Error sending message: ", error)
+    }
   }
 
   const handleKeyDown = (e) => {
