@@ -67,7 +67,7 @@ export class StorageAndDBService {
             .insert({ title })
             .select('conversation_id, title');   // returns an array of the inserted rows
         if (error) throw error;
-        return data;
+        return data ?? [];
     } catch (error) {
         console.log("Supabase service :: newChat :: error :: ", error);
         }
@@ -76,7 +76,7 @@ export class StorageAndDBService {
     async getChatHistory(conversationId){
         try{
             const {data, error} = await this.client.from('messages')
-                                                    .select('content, role')
+                                                    .select('message_id, role, content')
                                                     .eq('conversation_id', conversationId)
                                                     .order('created_at', { ascending: false })
                                                     .limit(50);

@@ -19,10 +19,12 @@ export default function Chat() {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
+        if (!conversation_id) return
         const res = await DBService.getChatHistory(conversation_id)
-        setMessages(res)
+        setMessages(Array.isArray(res) ? res : [])
       } catch (error) {
         console.log("Error fetching messages:: fetchMessages ::", error)
+        setMessages([])
       }
     }
     fetchMessages()
@@ -37,10 +39,10 @@ export default function Chat() {
   }, [])
 
   const handleSend = async (e) => {
-    e.preventDefault()
+    e?.preventDefault?.()
 
     const userMessage = input.trim()
-    if (!text) return
+    if (!userMessage) return
 
     setMessages((prev) => [
       ...prev,
@@ -48,8 +50,12 @@ export default function Chat() {
         role: "user",
         content: userMessage,
       },
-    ]);
+    ])
     setInput('')
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'
+    }
 
     try {
       const { data, error } = await supabase.functions.invoke("chat", {
@@ -57,11 +63,23 @@ export default function Chat() {
           conversationId: conversation_id,
           message: userMessage,
         },
-      });
+      })
 
-      const assistantReply = data.reply
-      setMessages((prev) => [...prev, { role: "assistant", content: assistantReply }]);
+      if (error) {
+        console.error("Supabase function error:", error)
+        return
+      }
 
+      const assistantReply = data?.reply
+      if (assistantReply) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: assistantReply,
+          },
+        ])
+      }
     } catch (error) {
       console.log("Error sending message: ", error)
     }
@@ -70,11 +88,13 @@ export default function Chat() {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      textareaRef.current?.form?.requestSubmit()
+      handleSend(e)
     }
   }
 
-  bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
 
   return (
     <TooltipProvider delay={200}>
@@ -86,14 +106,14 @@ export default function Chat() {
 
         {/* Messages */}
         <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-4">
-          {messages.length === 0 ? (
+          {(!messages || messages.length === 0) ? (
             <div className="flex h-full items-center justify-center">
               <p className="font-serif text-[#6F4636]">Start the conversation</p>
             </div>
           ) : (
             <div className="mx-auto max-w-[760px] flex flex-col gap-6">
-              {messages.map((message) => (
-                <ChatMessage key={message.message_id} message={message} />
+              {messages?.map((message) => (
+                <ChatMessage key={message.message_id || message.id || Math.random()} message={message} />
               ))}
               <div ref={bottomRef} />
             </div>
@@ -134,21 +154,16 @@ export default function Chat() {
                 <TooltipContent>Attach file</TooltipContent>
               </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      type="submit"
-                      disabled={!input.trim()}
-                      aria-label="Send message"
-                      className="h-[44px] w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15"
-                    >
-                      <ArrowUp size={20} strokeWidth={2.5} />
-                    </Button>
-                  }
-                />
-                <TooltipContent>Send (Enter)</TooltipContent>
-              </Tooltip>
+              <button
+                type="submit"
+                onClick={handleSend}
+                disabled={!input.trim()}
+                title="Send (Enter)"
+                aria-label="Send message"
+                className="h-[44px] w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed"
+              >
+                <ArrowUp size={20} strokeWidth={2.5} />
+              </button>
             </div>
           </form>
         </div>
