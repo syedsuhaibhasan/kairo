@@ -13,6 +13,7 @@ export default function Chat() {
   const [input, setInput] = useState('')
   const [attachedFile, setAttachedFile] = useState(null)
   const [fileError, setFileError] = useState('')
+  const [path, setPath] = useState('')
 
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
@@ -36,27 +37,29 @@ export default function Chat() {
     }
 
     setFileError('')
-    setAttachedFile({
+    setAttachedFile({ 
       name: file.name,
       size: file.size,
       file: file,
     })
 
     if (user) {
-      await DBService.uploadDocument(user, file, conversation_id)
+      const res = await DBService.uploadDocument(user, file, conversation_id)
+      setPath(res?.path)
     }
   }
 
   const handleRemoveFile = async() => {
-    const fileToDelete = attachedFile.file.path
-    setAttachedFile(null)
+    const filePath = path
     setFileError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
-    if (user && fileToDelete) {
-      await DBService.deleteDocument(user, conversation_id, fileToDelete)
+    if (user && filePath) {
+      await DBService.deleteDocument(user, conversation_id, filePath)
     }
+    setPath('')
+    setAttachedFile(null)
   }
 
 
