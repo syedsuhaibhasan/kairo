@@ -1,11 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSelector } from 'react-redux'
 import { supabase } from '../../supabaseConfig'
 import DBService from '../supabase/config'
 import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp, FileText, X } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
 import { Button } from '../components/ui/button'
-import { StorageService } from '../supabase/config'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
 
 export default function Chat() {
@@ -18,7 +18,7 @@ export default function Chat() {
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
   const { conversation_id } = useParams()
-  const authUser = supabase.auth.user()
+  const user = useSelector((state) => state.auth.userData)
 
   const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
 
@@ -27,7 +27,7 @@ export default function Chat() {
   const handleFileSelect = async(e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    
+
     if (file.size > MAX_FILE_SIZE) {
       setFileError('File exceeds 15MB limit')
       setAttachedFile(null)
@@ -41,15 +41,21 @@ export default function Chat() {
       size: file.size,
       file: file,
     })
-    await StorageService.uploadDocument(authUser, file, conversation_id);
-    
+
+    if (user) {
+      await DBService.uploadDocument(user, file, conversation_id)
+    }
   }
 
-  const handleRemoveFile = () => {
+  const handleRemoveFile = async() => {
+    const fileToDelete = attachedFile.file.path
     setAttachedFile(null)
     setFileError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
+    }
+    if (user && fileToDelete) {
+      await DBService.deleteDocument(user, conversation_id, fileToDelete)
     }
   }
 
