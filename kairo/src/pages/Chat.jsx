@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp, FileText, X } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
 import { Button } from '../components/ui/button'
+import { StorageService } from '../supabase/config'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
 
 export default function Chat() {
@@ -17,12 +18,13 @@ export default function Chat() {
   const textareaRef = useRef(null)
   const fileInputRef = useRef(null)
   const { conversation_id } = useParams()
+  const authUser = supabase.auth.user()
 
   const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
 
   const title =  'New chat'
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async(e) => {
     const file = e.target.files?.[0]
     if (!file) return
     
@@ -39,6 +41,8 @@ export default function Chat() {
       size: file.size,
       file: file,
     })
+    await StorageService.uploadDocument(authUser, file, conversation_id);
+    
   }
 
   const handleRemoveFile = () => {
