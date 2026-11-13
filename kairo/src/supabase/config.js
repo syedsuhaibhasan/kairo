@@ -24,11 +24,6 @@ async uploadDocument(user, file, conversationId) {
             throw error;
         }
 
-        console.log(
-            "Supabase service :: uploadDocument :: Successfully uploaded ::",
-            data?.path
-        );
-
         return data;
 
     } catch (error) {

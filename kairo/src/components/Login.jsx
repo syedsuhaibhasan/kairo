@@ -30,7 +30,7 @@ function Login() {
 
       const data = await authService.signInWithGoogleToken(response.credential);
       if (data?.user) {
-        dispatch(setUser(userData));
+        dispatch(setUser({ userData: data.user }));
         navigate('/new-chat');
       }
     } catch (error) {
@@ -45,7 +45,7 @@ function Login() {
       const session = await authService.loginUser(data.email, data.password);
       if (session && session.user) {
         const userData = await authService.getCurrentUser();
-        dispatch(setUser(userData));
+        dispatch(setUser({ userData }));
         navigate('/new-chat');
       }
     } catch (error) {

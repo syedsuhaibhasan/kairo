@@ -14,6 +14,8 @@ export default function Chat() {
   const [attachedFile, setAttachedFile] = useState(null)
   const [fileError, setFileError] = useState('')
   const [path, setPath] = useState('')
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const bottomRef = useRef(null)
   const textareaRef = useRef(null)
@@ -21,42 +23,94 @@ export default function Chat() {
   const { conversation_id } = useParams()
   const user = useSelector((state) => state.auth.userData)
 
-  const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB
+  const MAX_FILE_SIZE = 15 * 1024 * 1024;
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
   const title =  'New chat'
 
-  const handleFileSelect = async(e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const ALLOWED_EXTENSIONS = [
+  "png", "jpg", "jpeg", "webp", "gif",
+  "pdf", "docx", "txt",
+];
 
-    if (file.size > MAX_FILE_SIZE) {
-      setFileError('File exceeds 15MB limit')
-      setAttachedFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const extension = file.name.split(".").pop()?.toLowerCase();
+
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      setFileError("Unsupported file format.");
+      e.target.value = "";
+      return;
     }
 
-    setFileError('')
-    setAttachedFile({ 
+    const isImage = ["png", "jpg", "jpeg", "webp", "gif",]
+                    .includes(extension);
+
+    const sizeLimit = isImage ? MAX_IMAGE_SIZE : MAX_FILE_SIZE;
+
+    if (file.size > sizeLimit) {
+      setFileError(
+        isImage
+          ? "Image exceeds 10MB limit."
+          : "Document exceeds 15MB limit."
+      );
+
+      e.target.value = "";
+      return;
+    }
+
+    if (!user || !conversation_id) {
+      setFileError("Please open a conversation first.");
+      e.target.value = "";
+      return;
+    }
+
+    setFileError("");
+    setPath("");
+
+    setAttachedFile({
       name: file.name,
       size: file.size,
       file: file,
-    })
+    });
 
-    if (user) {
-      const res = await DBService.uploadDocument(user, file, conversation_id)
-      setPath(res?.path)
+    setIsUploading(true);
+
+    try {
+      const uploaded = await DBService.uploadDocument(user, file, conversation_id);
+
+      if (!uploaded?.path) {
+        throw new Error("Upload failed.");
+      }
+
+      setPath(uploaded.path);
+
+      console.log("File uploaded:", uploaded.path);
+
+    } catch (error) {
+      console.error("File upload error:", error);
+
+      setFileError("Could not upload file. Please try again.");
+      setAttachedFile(null);
+      setPath("");
+
+      e.target.value = "";
+
+    } finally {
+      setIsUploading(false);
     }
-  }
+  };
 
   const handleRemoveFile = async() => {
     const filePath = path
+    if (user && filePath) {
+      await DBService.deleteDocument(user, conversation_id, filePath)
+    }
     setFileError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
-    }
-    if (user && filePath) {
-      await DBService.deleteDocument(user, conversation_id, filePath)
     }
     setPath('')
     setAttachedFile(null)
@@ -85,54 +139,124 @@ export default function Chat() {
     ta.style.height = `${ta.scrollHeight}px`
   }, [])
 
-  const handleSend = async (e) => {
-    e?.preventDefault?.()
+  
+const handleSend = async (e) => {
+  e?.preventDefault?.();
 
-    const userMessage = input.trim()
-    if (!userMessage && !attachedFile) return
+  if (isSending || isUploading) return;
 
-    setMessages((prev) => [
-      ...prev,
+  const userMessage = input.trim();
+
+  if (!userMessage && !attachedFile) return;
+
+  // the file must finish uploading before we send its path.
+  if (attachedFile && !path) {
+    setFileError("Please wait until the file finishes uploading.");
+    return;
+  }
+
+  // keep a snapshot of the attachment before changing state.
+  const currentAttachment = attachedFile && path
+    ? {
+        storageKey: path,
+        fileName: attachedFile.name,
+        mimeType: attachedFile.file.type,
+      }
+    : null;
+
+  const messageToDisplay = userMessage ||
+    `Please analyze the attached file: ${attachedFile.name}`;
+
+  const temporaryMessageId = crypto.randomUUID();
+
+  setIsSending(true);
+  setFileError("");
+
+  // optimistically display the user message.
+  setMessages((prev) => [
+    ...prev,
+    {
+      message_id: temporaryMessageId,
+      role: "user",
+      content: messageToDisplay,
+    },
+  ]);
+
+  try {
+    const { data, error } = await supabase.functions.invoke(
+      "chat",
       {
-        message_id: crypto.randomUUID(),
-        role: "user",
-        content: userMessage || attachedFile?.name,
-      },
-    ])
-    setInput('')
-    handleRemoveFile()
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-    }
-
-    try {
-      const { data, error } = await supabase.functions.invoke("chat", {
         body: {
           conversationId: conversation_id,
           message: userMessage,
+
+          // null for normal messages.
+          // object for image/document messages.
+          attachment: currentAttachment,
         },
-      })
-
-      if (error) {
-        console.error("Supabase function error:", error)
-        return
       }
+    );
 
-      const assistantReply = data?.reply
-      if (assistantReply) {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: assistantReply,
-          },
-        ])
-      }
-    } catch (error) {
-      console.log("Error sending message: ", error)
+    if (error) {
+      throw error;
     }
+
+    if (!data?.reply) {
+      throw new Error(data?.error || "AI returned no response.");
+    }
+
+    // replacing temporary user message ID with DB message ID.
+    setMessages((prev) => [
+      ...prev.map((item) =>
+        item.message_id === temporaryMessageId
+          ? {
+              ...item,
+              message_id: data.userMessageId,
+            }
+          : item
+      ),
+
+      // display assistant response.
+      {
+        message_id: data.messageId,
+        role: "assistant",
+        content: data.reply,
+      },
+    ]);
+
+    setInput("");
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+
+    setAttachedFile(null);
+    setPath("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+
+  } catch (error) {
+    console.error("Error sending message:", error);
+
+    // remove optimistic message so it isn't displayed twice.
+    setMessages((prev) =>
+      prev.filter(
+        (item) => item.message_id !== temporaryMessageId
+      )
+    );
+
+    // Keep input and attachment so the user can retry.
+    setFileError(
+      error?.message || "Could not send message. Please try again."
+    );
+
+  } finally {
+    setIsSending(false);
   }
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
