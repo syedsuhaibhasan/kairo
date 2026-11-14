@@ -5,6 +5,7 @@ import DBService from '../supabase/config'
 import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp, FileText, X } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
+import { Avatar, AvatarFallback } from '../components/ui/avatar'
 import { Button } from '../components/ui/button'
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
 
@@ -160,27 +161,39 @@ const handleSend = async (e) => {
     ? {
         storageKey: path,
         fileName: attachedFile.name,
-        mimeType: attachedFile.file.type,
+        mimeType: attachedFile.file?.type || "",
       }
     : null;
 
-  const messageToDisplay = userMessage ||
-    `Please analyze the attached file: ${attachedFile.name}`;
-
   const temporaryMessageId = crypto.randomUUID();
+  const outgoingText = userMessage;
 
-  setIsSending(true);
-  setFileError("");
-
-  // optimistically display the user message.
+  // Optimistically display the user message with attachment immediately
   setMessages((prev) => [
     ...prev,
     {
       message_id: temporaryMessageId,
       role: "user",
-      content: messageToDisplay,
+      content: outgoingText,
+      attachment: currentAttachment,
     },
   ]);
+
+  // Immediately clear the composer input & attachment UI so user gets instant feedback
+  setInput("");
+  setAttachedFile(null);
+  setPath("");
+  setFileError("");
+
+  if (textareaRef.current) {
+    textareaRef.current.style.height = "auto";
+  }
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+
+  setIsSending(true);
 
   try {
     const { data, error } = await supabase.functions.invoke(
@@ -188,10 +201,7 @@ const handleSend = async (e) => {
       {
         body: {
           conversationId: conversation_id,
-          message: userMessage,
-
-          // null for normal messages.
-          // object for image/document messages.
+          message: outgoingText || (currentAttachment ? `Please analyze the attached file: ${currentAttachment.fileName}` : ""),
           attachment: currentAttachment,
         },
       }
@@ -205,49 +215,38 @@ const handleSend = async (e) => {
       throw new Error(data?.error || "AI returned no response.");
     }
 
-    // replacing temporary user message ID with DB message ID.
+    // replacing temporary user message ID with DB message ID while preserving attachment
     setMessages((prev) => [
       ...prev.map((item) =>
         item.message_id === temporaryMessageId
           ? {
               ...item,
-              message_id: data.userMessageId,
+              message_id: data.userMessageId || item.message_id,
             }
           : item
       ),
 
       // display assistant response.
       {
-        message_id: data.messageId,
+        message_id: data.messageId || crypto.randomUUID(),
         role: "assistant",
         content: data.reply,
       },
     ]);
 
-    setInput("");
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-
-    setAttachedFile(null);
-    setPath("");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-
   } catch (error) {
     console.error("Error sending message:", error);
 
-    // remove optimistic message so it isn't displayed twice.
+    // remove optimistic message so it isn't displayed on error
     setMessages((prev) =>
       prev.filter(
         (item) => item.message_id !== temporaryMessageId
       )
     );
 
-    // Keep input and attachment so the user can retry.
+    // Restore input text so the user doesn't lose what they typed
+    setInput(outgoingText);
+
     setFileError(
       error?.message || "Could not send message. Please try again."
     );
@@ -267,7 +266,7 @@ const handleSend = async (e) => {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isSending])
 
   return (
     <TooltipProvider delay={200}>
@@ -288,6 +287,18 @@ const handleSend = async (e) => {
               {messages?.map((message) => (
                 <ChatMessage key={message.message_id || message.id || Math.random()} message={message} />
               ))}
+              {isSending && (
+                <div className="flex gap-3 items-center animate-in fade-in duration-300">
+                  <Avatar className="h-[30px] w-[30px] shrink-0 rounded-full bg-[#ff6b0f] font-serif text-lg text-white after:border-0 border-0 shadow-sm shadow-orange-900/10">
+                    <AvatarFallback className="bg-[#ff6b0f] text-white font-serif text-lg">k</AvatarFallback>
+                  </Avatar>
+                  <div className="rounded-[6px_20px_20px_20px] border border-[#F0DCCB] bg-white/80 px-4 py-3 flex items-center gap-1.5 shadow-sm shadow-orange-950/5">
+                    <span className="h-2 w-2 rounded-full bg-[#ff6b0f] animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-[#ff6b0f] animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-[#ff6b0f] animate-bounce"></span>
+                  </div>
+                </div>
+              )}
               <div ref={bottomRef} />
             </div>
           )}
@@ -317,14 +328,20 @@ const handleSend = async (e) => {
                 <span className="text-[10px] text-[#7D5F4E]">
                   ({(attachedFile.size / (1024 * 1024)).toFixed(1)} MB)
                 </span>
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  aria-label="Remove attachment"
-                  className="ml-1 text-[#7D5F4E] hover:text-[#A83A04] hover:bg-white/80 rounded-full p-0.5 cursor-pointer transition-colors"
-                >
-                  <X size={14} />
-                </button>
+                {isUploading ? (
+                  <span className="text-[10px] text-[#ff6b0f] animate-pulse font-medium ml-1">
+                    Uploading...
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleRemoveFile}
+                    aria-label="Remove attachment"
+                    className="ml-1 text-[#7D5F4E] hover:text-[#A83A04] hover:bg-white/80 rounded-full p-0.5 cursor-pointer transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
             )}
 
@@ -339,18 +356,20 @@ const handleSend = async (e) => {
               value={input}
               onChange={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder="Message Kairo..."
+              placeholder={isSending ? "Kairo is thinking..." : "Message Kairo..."}
               aria-label="Message Kairo"
               rows={1}
-              className="w-full resize-none font-serif text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto"
+              disabled={isSending}
+              className="w-full resize-none font-serif text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto disabled:opacity-60"
             />
             <div className="flex items-center justify-between mt-2">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                title="Attach file (max 15MB)"
+                disabled={isSending || isUploading}
+                title={isUploading ? "Uploading file..." : "Attach file (max 15MB)"}
                 aria-label="Attach file"
-                className="h-[38px] w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors"
+                className="h-[38px] w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Paperclip size={18} className="text-[#6F4636]" />
               </button>
@@ -358,7 +377,7 @@ const handleSend = async (e) => {
               <button
                 type="submit"
                 onClick={handleSend}
-                disabled={!input.trim() && !attachedFile}
+                disabled={(!input.trim() && !attachedFile) || isSending || isUploading}
                 title="Send (Enter)"
                 aria-label="Send message"
                 className="h-[44px] w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed"
