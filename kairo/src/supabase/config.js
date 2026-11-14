@@ -1,5 +1,5 @@
 import { supabase } from '../../supabaseConfig'
-
+import { notify } from '@/lib/notify'
 
 export class StorageAndDBService {
     client;
@@ -27,10 +27,10 @@ async uploadDocument(user, file, conversationId) {
         return data;
 
     } catch (error) {
-        console.error(
-            "Supabase service :: uploadDocument :: Error ::",
-            error
-        );
+        // console.error(
+        //     "Supabase service :: uploadDocument :: Error ::",
+        //     error
+        // );
 
         return null;
     }
@@ -60,15 +60,15 @@ async uploadDocument(user, file, conversationId) {
             throw error;
         }
 
-        console.log(
-            "Supabase service :: deleteDocument :: Successfully deleted :: ",
-            filePath
-        );
+        // console.log(
+        //     "Supabase service :: deleteDocument :: Successfully deleted :: ",
+        //     filePath
+        // );
 
         return data;
 
     } catch (error) {
-        console.log("Supabase service :: deleteDocument :: error :: ", error);
+        // console.log("Supabase service :: deleteDocument :: error :: ", error);
         return null;
     }
 }
@@ -82,10 +82,10 @@ async uploadDocument(user, file, conversationId) {
                                                     contentType: file.type,
                                                     upsert: true,     
                                             });
-            console.log("Supabase service :: uploadProfilePicture :: Successfully uploaded :: ", data.path);
+            // console.log("Supabase service :: uploadProfilePicture :: Successfully uploaded :: ", data.path);
             return data;
         }catch(error){
-            console.log("Supabase service :: uploadProfilePicture :: error :: ", error);
+            // console.log("Supabase service :: uploadProfilePicture :: error :: ", error);
             return null;
         }
     }
@@ -100,7 +100,8 @@ async uploadDocument(user, file, conversationId) {
         if (error) throw error;
         return data ?? [];
     } catch (error) {
-        console.log("Supabase service :: getPreviousConversations :: error :: ", error);
+        // console.log("Supabase service :: getPreviousConversations :: error :: ", error);
+        notify.error("Couldn't load your chats", "Please check your connection and try again.", "load-chats-failed");
         return [];
         }
     }
@@ -114,7 +115,7 @@ async uploadDocument(user, file, conversationId) {
             if(!data) return "New Chat";
             return data ?? []
         } catch (error) {
-            console.log("Supabase service :: getConversationTitle :: error :: ", error);    
+            // console.log("Supabase service :: getConversationTitle :: error :: ", error);    
         }
     }
 
@@ -127,7 +128,9 @@ async uploadDocument(user, file, conversationId) {
         if (error) throw error;
         return data ?? [];
     } catch (error) {
-        console.log("Supabase service :: newChat :: error :: ", error);
+        // console.log("Supabase service :: newChat :: error :: ", error);
+        notify.error("Couldn't create the chat", "Please try again in a moment.", "create-chat-failed");
+        return [];
         }
     }
 
@@ -145,7 +148,7 @@ async uploadDocument(user, file, conversationId) {
                 return data.reverse(); // Reverse the order to get the latest messages first
             }
         }catch(error){
-            console.log("Supabase service :: getChatHistory :: error :: ", error);
+            // console.log("Supabase service :: getChatHistory :: error :: ", error);
         }
     }
 

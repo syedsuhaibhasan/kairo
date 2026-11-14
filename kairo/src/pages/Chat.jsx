@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp, FileText, X } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
 import { TooltipProvider } from '../components/ui/tooltip'
+import { notify } from '@/lib/notify'
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
@@ -86,10 +87,12 @@ export default function Chat() {
 
       setPath(uploaded.path);
 
-      console.log("File uploaded:", uploaded.path);
+      // console.log("File uploaded:", uploaded.path);
+      notify.success("File uploaded", "Your file was added to the chat.", "upload-success");
 
     } catch (error) {
-      console.error("File upload error:", error);
+      // console.error("File upload error:", error);
+      notify.error("Upload failed", "We couldn't upload your file. Please try again.", "upload-failed");
 
       setFileError("Could not upload file. Please try again.");
       setAttachedFile(null);
@@ -113,6 +116,7 @@ export default function Chat() {
     }
     setPath('')
     setAttachedFile(null)
+    notify.warning("Upload cancelled", "No file was added.", "upload-cancelled");
   }
 
 
@@ -123,7 +127,8 @@ export default function Chat() {
         const res = await DBService.getChatHistory(conversation_id)
         setMessages(Array.isArray(res) ? res : [])
       } catch (error) {
-        console.log("Error fetching messages:: fetchMessages ::", error)
+        // console.log("Error fetching messages:: fetchMessages ::", error)
+        notify.error("Couldn't load messages", "Please check your connection and try again.", "load-messages-failed");
         setMessages([])
       }
     }
@@ -233,7 +238,8 @@ const handleSend = async (e) => {
     ]);
 
   } catch (error) {
-    console.error("Error sending message:", error);
+    // console.error("Error sending message:", error);
+    notify.error("Kairo couldn't respond", "Something went wrong while writing a reply. Please try again.", "send-message-failed");
 
     // remove optimistic message so it isn't displayed on error
     setMessages((prev) =>
@@ -245,9 +251,7 @@ const handleSend = async (e) => {
     // Restore input text so the user doesn't lose what they typed
     setInput(outgoingText);
 
-    setFileError(
-      error?.message || "Could not send message. Please try again."
-    );
+    setFileError("Could not send message. Please try again.");
 
   } finally {
     setIsSending(false);

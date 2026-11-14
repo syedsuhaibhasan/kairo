@@ -17,7 +17,7 @@ const SignInWithGoogleButton = forwardRef(({onCredential}, forwardedRef) => {
         const googleClientId = conf.googleClientId;
 
         if (!googleClientId || googleClientId === 'undefined') {
-            console.error('Google sign-in is not configured.');
+            // console.error('Google sign-in is not configured.');
             return;
         }
 

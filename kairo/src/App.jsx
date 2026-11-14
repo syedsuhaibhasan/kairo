@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { login, logout } from './store/authSlice'
 import { supabase } from '../supabaseConfig'
+import { Toaster } from '@/components/ui/sonner'
 
 function App() {
   const dispatch = useDispatch()
@@ -33,6 +34,7 @@ function App() {
   return (
     <>
       <Outlet />
+      <Toaster />
     </>
   )
 }

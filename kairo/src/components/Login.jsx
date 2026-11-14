@@ -8,6 +8,7 @@ import authService from '../supabase/auth'
 import { login as setUser } from '../store/authSlice'
 import SignInWithGoogleButton from '../supabase/signWithGoogleBtnConfig'
 import AuthBackground from "./AuthBackground"
+import { notify } from '@/lib/notify'
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Input } from "./ui/input"
@@ -34,7 +35,8 @@ function Login() {
       }
     } catch (error) {
       setError(error.message);
-      console.error('Error signing in with Google:', error);
+      // console.error('Error signing in with Google:', error);
+      notify.warning("Sign-in cancelled", "You can try again whenever you're ready.", "google-signin-failed");
     }
   }, [dispatch, navigate]);
 
@@ -46,10 +48,14 @@ function Login() {
         const userData = await authService.getCurrentUser();
         dispatch(setUser({ userData }));
         navigate('/new-chat');
+      } else {
+        setError('Invalid credentials');
+        notify.error("Sign-in failed", "Check your email and password and try again.", "auth-login-failed");
       }
     } catch (error) {
       setError(error.message);
-      console.log("Login :: login :: ", error);
+      // console.log("Login :: login :: ", error);
+      notify.error("Sign-in failed", "Check your email and password and try again.", "auth-login-failed");
     }
   }
 
@@ -126,7 +132,7 @@ function Login() {
 
                   {error && (
                     <p role="alert" className="text-sm font-medium text-red-600">
-                      {error}
+                      Check your email and password and try again.
                     </p>
                   )}
 

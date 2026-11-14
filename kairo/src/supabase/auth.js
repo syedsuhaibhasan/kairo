@@ -16,9 +16,11 @@ export class AuthService {
                     emailRedirectTo: 'http://localhost:5173/'
                 }
             })
+            if (error) throw error;
             return data;
         } catch (error) {
-            console.log("Supabase service :: OAuth Failure :: signInWithGoogle :: ", error);
+            // console.log("Supabase service :: OAuth Failure :: signInWithGoogle :: ", error);
+            throw error;
         }
     }
 
@@ -35,7 +37,7 @@ export class AuthService {
 
             return data;
         } catch (error) {
-            console.log("Supabase service :: Google ID Token Failure :: signInWithGoogleToken :: ", error);
+            // console.log("Supabase service :: Google ID Token Failure :: signInWithGoogleToken :: ", error);
             throw error;
         }
     }
@@ -58,14 +60,16 @@ export class AuthService {
                 throw error;
             }
 
-            if (!data.user.email_confirmed_at) {
+            if (!data?.user?.email_confirmed_at) {
                 await this.client.auth.signOut()
                 throw new Error("Please confirm your email before signing in.")
             }
 
+            return data;
 
         } catch (error) {
-            console.log("Supabase service :: createUser :: ", error);
+            // console.log("Supabase service :: createUser :: ", error);
+            throw error;
         }
     }
 
@@ -75,9 +79,11 @@ export class AuthService {
                 email: email,
                 password: password,
             })
+            if (error) throw error;
             return data;
         } catch (error) {
-            console.log("Supabase service :: loginUser :: ", error);
+            // console.log("Supabase service :: loginUser :: ", error);
+            throw error;
         }
     }
 
@@ -88,7 +94,7 @@ export class AuthService {
                 throw error;
             }
         } catch (error) {
-            console.log("Supabase service :: logoutUser :: ", error);
+            // console.log("Supabase service :: logoutUser :: ", error);
         }
     }
 
@@ -100,7 +106,7 @@ export class AuthService {
             }
             return data.session.user;
         } catch (error) {
-            console.log("Supabase service :: getCurrentUser :: ", error);
+            // console.log("Supabase service :: getCurrentUser :: ", error);
         }
     }
 }

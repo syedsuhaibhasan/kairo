@@ -8,6 +8,7 @@ import {useDispatch} from 'react-redux';
 import {useForm} from 'react-hook-form';
 import SignInWithGoogleButton from '../supabase/signWithGoogleBtnConfig'
 import AuthBackground from "./AuthBackground"
+import { notify } from '@/lib/notify'
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
 import { Input } from "./ui/input"
@@ -34,7 +35,8 @@ function Signup(){
             }
         } catch (error) {
             setError(error.message);
-            console.error("Error signing in with Google:", error);
+            // console.error("Error signing in with Google:", error);
+            notify.warning("Sign-in cancelled", "You can try again whenever you're ready.", "google-signin-failed");
         }
     }, [dispatch, navigate]);
 
@@ -44,10 +46,15 @@ function Signup(){
             const session = await authService.createUser(data.email, data.password);
             if(session){
                 dispatch(setUser(session.user));
+                notify.success("Account created", "Welcome to Kairo.", "auth-signup-success");
                 navigate('/dashboard');
+            } else {
+                setError('Signup failed');
+                notify.error("Couldn't create your account", "Please check your details and try again.", "auth-signup-failed");
             }
         }catch(error){
             setError(error.message);
+            notify.error("Couldn't create your account", "Please check your details and try again.", "auth-signup-failed");
         }
     }
 
@@ -137,7 +144,7 @@ function Signup(){
 
                     {error && (
                       <p role="alert" className="text-sm font-medium text-red-600">
-                        {error}
+                        Please check your details and try again.
                       </p>
                     )}
 

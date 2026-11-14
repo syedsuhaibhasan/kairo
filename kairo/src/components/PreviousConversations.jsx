@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
+import { notify } from '@/lib/notify';
 
 function PreviousConversations({ mobileOpen = false, onClose }) {
     const [conversations, setConversations] = useState([]);
@@ -37,7 +38,7 @@ function PreviousConversations({ mobileOpen = false, onClose }) {
                     setCurrentUser(user);
                 }
             } catch (error) {
-                console.log("PreviousConversations :: fetchUser error :: ", error);
+                // console.log("PreviousConversations :: fetchUser error :: ", error);
             }
         };
         fetchUser();
@@ -53,7 +54,7 @@ function PreviousConversations({ mobileOpen = false, onClose }) {
                     setConversations(fetchedConversations);
                 }
             } catch (error) {
-                console.log("PreviousConversations :: useEffect :: error :: ", error);
+                // console.log("PreviousConversations :: useEffect :: error :: ", error);
             }
         };
         fetchConversations();
@@ -70,7 +71,7 @@ function PreviousConversations({ mobileOpen = false, onClose }) {
         try {
             await authService.logoutUser();
         } catch (error) {
-            console.log("PreviousConversations :: logout error :: ", error);
+            // console.log("PreviousConversations :: logout error :: ", error);
         }
         navigate('/login');
     };
@@ -97,7 +98,8 @@ function PreviousConversations({ mobileOpen = false, onClose }) {
             navigate(`/chat/${created.conversation_id}`);
             onClose?.();
         } catch (err) {
-            console.log("PreviousConversations :: handleCreateNewChat error :: ", err);
+            // console.log("PreviousConversations :: handleCreateNewChat error :: ", err);
+            notify.error("Couldn't create the chat", "Please try again in a moment.", "create-chat-failed");
             setCreateError("Failed to create new chat. Please try again.");
         } finally {
             setIsSubmitting(false);
