@@ -11,12 +11,17 @@ import AppLayout from './components/AppLayout.jsx'
 import NewChat from './pages/NewChat.jsx'
 import Chat from './pages/Chat.jsx'
 import AuthLayout from './components/AuthLayout.jsx'
+import Home from './pages/Home.jsx'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      {
+        index: true,
+        element: <Home />
+      },
       {
         path: '/login',
         element: (
