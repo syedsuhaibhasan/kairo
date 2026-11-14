@@ -1,9 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
-import { Paperclip, ArrowUp, Sparkles, Lightbulb, PenTool, Code, Compass, FileText, X } from 'lucide-react';
+import { Paperclip, ArrowUp, Lightbulb, PenTool, Code, Compass, FileText, X } from 'lucide-react';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip';
+import { TooltipProvider } from '../components/ui/tooltip';
 
 const SUGGESTIONS = [
     {
@@ -101,33 +100,38 @@ export default function NewChat() {
 
     return (
         <TooltipProvider delay={200}>
-            <div className="flex h-dvh flex-col">
+            <div className="flex h-[calc(100dvh-3.5rem)] lg:h-dvh flex-col">
                 {/* Centered Welcome / Hero Area */}
-                <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 overflow-y-auto py-6">
+                <div className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 sm:px-6 overflow-y-auto py-6">
                     <Badge
                         variant="warm"
                         className="mb-3.5 gap-1.5 px-3 py-1 font-serif text-[13px] border-[#F0DCCB] shadow-sm shadow-orange-950/5 animate-in fade-in slide-in-from-top-2 duration-300"
                     >
-                        <Sparkles size={13} className="text-[#ff6b0f]" />
+                        <img
+                            src="/svg/kairo-mark.svg"
+                            alt=""
+                            className="h-4 w-auto shrink-0"
+                            draggable={false}
+                        />
                         <span>Kairo Assistant</span>
                     </Badge>
 
-                    <h1 className="font-serif text-[42px] md:text-[54px] leading-[1.1] text-center text-[#2B1810] tracking-tight">
+                    <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl leading-[1.1] text-center text-[#2B1810] tracking-tight">
                         What's on your mind?
                     </h1>
-                    <p className="mt-2.5 text-[15px] text-[#6F4636] text-center max-w-md">
+                    <p className="mt-2.5 text-sm sm:text-base text-[#6F4636] text-center max-w-md">
                         Ask anything. Kairo is here to help you think, create, and explore.
                     </p>
 
                     {/* Creative suggestion prompt cards */}
-                    <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-[760px]">
+                    <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-[760px]">
                         {SUGGESTIONS.map((sug, idx) => {
                             const Icon = sug.icon;
                             return (
                                 <Card
                                     key={idx}
                                     onClick={() => handleSelectSuggestion(sug.prompt)}
-                                    className="p-3.5 rounded-2xl border-[#F0DCCB]/80 bg-white/70 hover:bg-white/95 hover:border-[#ff6b0f]/40 hover:shadow-md hover:shadow-orange-950/5 transition-all cursor-pointer text-left ring-0 gap-1 group"
+                                    className="p-3 sm:p-3.5 rounded-2xl border-[#F0DCCB]/80 bg-white/70 hover:bg-white/95 hover:border-[#ff6b0f]/40 hover:shadow-md hover:shadow-orange-950/5 transition-all cursor-pointer text-left ring-0 gap-1 group"
                                 >
                                     <div className="flex items-center gap-2">
                                         <div className="p-1.5 rounded-xl bg-[#FFF0E2] text-[#ff6b0f] group-hover:scale-105 transition-transform">
@@ -147,10 +151,10 @@ export default function NewChat() {
                 </div>
 
                 {/* Composer docked below */}
-                <div className="px-8 pb-1.5">
+                <div className="px-3 sm:px-8 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
                     <form
                         onSubmit={handleSend}
-                        className="mx-auto max-w-[760px] rounded-3xl border border-[#F0DCCB]/90 bg-white/90 shadow-xl shadow-orange-950/10 p-[14px] transition-all focus-within:ring-2 focus-within:ring-[#ff6b0f]/20 focus-within:border-[#ff6b0f]/50"
+                        className="mx-auto max-w-[760px] rounded-3xl border border-[#F0DCCB]/90 bg-white/90 shadow-xl shadow-orange-950/10 p-3 sm:p-[14px] transition-all focus-within:ring-2 focus-within:ring-[#ff6b0f]/20 focus-within:border-[#ff6b0f]/50"
                     >
                         {/* Hidden file input */}
                         <input
@@ -195,7 +199,7 @@ export default function NewChat() {
                             placeholder="Message Kairo..."
                             aria-label="Message Kairo"
                             rows={1}
-                            className="w-full resize-none font-serif text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto"
+                            className="w-full resize-none font-serif text-base sm:text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto"
                         />
                         <div className="flex items-center justify-between mt-2">
                             <button
@@ -203,7 +207,7 @@ export default function NewChat() {
                                 onClick={() => fileInputRef.current?.click()}
                                 title="Attach file (max 15MB)"
                                 aria-label="Attach file"
-                                className="h-[38px] w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors"
+                                className="h-11 w-11 sm:h-[38px] sm:w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors shrink-0"
                             >
                                 <Paperclip size={18} className="text-[#6F4636]" />
                             </button>
@@ -214,7 +218,7 @@ export default function NewChat() {
                                 disabled={!input.trim() && !attachedFile}
                                 title="Send (Enter)"
                                 aria-label="Send message"
-                                className="h-[44px] w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed"
+                                className="h-11 w-11 sm:h-[44px] sm:w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed shrink-0"
                             >
                                 <ArrowUp size={20} strokeWidth={2.5} />
                             </button>
@@ -223,7 +227,7 @@ export default function NewChat() {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-xs text-[#6F4636] py-2">
+                <p className="text-center text-[11px] sm:text-xs text-[#6F4636] py-1.5 px-4 text-balance">
                     Kairo can make mistakes. Check important info.
                 </p>
             </div>

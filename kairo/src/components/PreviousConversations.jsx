@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import authService from '@/supabase/auth';
-import { LogOut, MessageSquare } from 'lucide-react';
+import { LogOut, MessageSquare, X } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Badge } from './ui/badge';
 
-function PreviousConversations() {
+function PreviousConversations({ mobileOpen = false, onClose }) {
     const [conversations, setConversations] = useState([]);
     const [newTitle, setNewTitle] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +95,7 @@ function PreviousConversations() {
             setConversations(prev => [created, ...prev]);
             cancelCreate();
             navigate(`/chat/${created.conversation_id}`);
+            onClose?.();
         } catch (err) {
             console.log("PreviousConversations :: handleCreateNewChat error :: ", err);
             setCreateError("Failed to create new chat. Please try again.");
@@ -112,15 +113,34 @@ function PreviousConversations() {
     const userInitial = userName ? userName.charAt(0).toUpperCase() : 'U';
 
     return (
-        <aside className="fixed inset-y-4 left-4 hidden w-[264px] flex-col gap-4 rounded-3xl border border-white/80 bg-white/60 p-[18px] shadow-xl shadow-orange-950/10 backdrop-blur md:flex">
-            <div className="flex items-center gap-2">
-                <Avatar className="h-[30px] w-[30px] shrink-0 rounded-full bg-[#ff6b0f] font-serif text-lg text-white after:border-0 border-0 shadow-sm shadow-orange-900/10">
-                    <AvatarFallback className="bg-[#ff6b0f] text-white font-serif text-lg">k</AvatarFallback>
-                </Avatar>
-                <span className="font-serif text-2xl text-[#2B1810]">Kairo</span>
-                <Badge variant="warm" className="ml-auto text-[10px] tracking-wider uppercase font-semibold px-2 py-0.5 border-[#F0DCCB]">
-                    v2.0
-                </Badge>
+        <aside
+            id="sidebar-drawer"
+            className={`fixed inset-y-0 left-0 z-50 flex w-[min(86vw,320px)] flex-col gap-4 border-r border-[#F0DCCB]/80 bg-white/95 p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl backdrop-blur transition-transform duration-200 motion-reduce:transition-none lg:fixed lg:inset-y-4 lg:left-4 lg:z-auto lg:w-[264px] lg:flex lg:flex-col lg:rounded-3xl lg:border lg:border-white/80 lg:bg-white/60 lg:p-[18px] lg:shadow-xl lg:shadow-orange-950/10 lg:transition-none lg:translate-x-0 lg:visible ${
+                mobileOpen ? 'translate-x-0' : '-translate-x-full max-lg:invisible'
+            }`}
+        >
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                    <img
+                        src="/svg/kairo-logo.svg"
+                        alt="Kairo"
+                        className="h-7 w-auto shrink-0"
+                        draggable={false}
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <Badge variant="warm" className="text-[10px] tracking-wider uppercase font-semibold px-2 py-0.5 border-[#F0DCCB] shrink-0">
+                        v2.0
+                    </Badge>
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        aria-label="Close chat history"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl text-[#6F4636] hover:bg-white/80 lg:hidden cursor-pointer transition-colors"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
             </div>
 
             {isCreating ? (
@@ -136,7 +156,7 @@ function PreviousConversations() {
                         maxLength={255}
                         disabled={isSubmitting}
                         placeholder="Name your chat"
-                        className="w-full rounded-[14px] border border-[#F0DCCB] bg-white/90 px-3 py-3 h-auto text-sm text-[#2B1810] placeholder:text-[#7D5F4E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
+                        className="w-full min-h-11 lg:min-h-0 rounded-[14px] border border-[#F0DCCB] bg-white/90 px-3 py-3 h-auto text-sm text-[#2B1810] placeholder:text-[#7D5F4E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f]"
                     />
                     {createError && (
                         <p role="alert" className="text-xs text-[#A83A04]">{createError}</p>
@@ -145,7 +165,7 @@ function PreviousConversations() {
                         <Button
                             type="submit"
                             disabled={!newTitle.trim() || isSubmitting}
-                            className="flex-1 rounded-xl bg-[#ff6b0f] py-2 h-auto text-sm font-medium text-white disabled:opacity-60 cursor-pointer"
+                            className="flex-1 min-h-11 lg:min-h-0 rounded-xl bg-[#ff6b0f] py-2 h-auto text-sm font-medium text-white disabled:opacity-60 cursor-pointer flex items-center justify-center"
                         >
                             {isSubmitting ? 'Creating...' : 'Create'}
                         </Button>
@@ -154,7 +174,7 @@ function PreviousConversations() {
                             variant="ghost"
                             onClick={cancelCreate}
                             disabled={isSubmitting}
-                            className="rounded-xl px-3 py-2 h-auto text-sm text-[#2B1810] hover:bg-white/85 cursor-pointer disabled:opacity-60"
+                            className="min-h-11 lg:min-h-0 rounded-xl px-3 py-2 h-auto text-sm text-[#2B1810] hover:bg-white/85 cursor-pointer disabled:opacity-60 flex items-center justify-center"
                         >
                             Cancel
                         </Button>
@@ -163,7 +183,7 @@ function PreviousConversations() {
             ) : (
                 <Button
                     type="button"
-                    className="w-full rounded-[14px] bg-[#ff6b0f] py-3 h-auto text-sm font-medium text-white hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-md shadow-orange-800/15"
+                    className="w-full min-h-11 lg:min-h-0 rounded-[14px] bg-[#ff6b0f] py-3 h-auto text-sm font-medium text-white hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer shadow-md shadow-orange-800/15 flex items-center justify-center"
                     onClick={() => {
                         setIsCreating(true);
                         setIsSubmitting(false);
@@ -196,12 +216,15 @@ function PreviousConversations() {
                                     key={conversation.conversation_id}
                                     type="button"
                                     aria-current={isActive ? 'page' : undefined}
-                                    className={`w-full flex items-center gap-2 truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${
+                                    className={`w-full min-h-11 lg:min-h-0 flex items-center gap-2 truncate rounded-xl px-2.5 py-2 text-left text-sm text-[#2B1810] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff6b0f] cursor-pointer ${
                                         isActive
                                             ? 'bg-white font-medium shadow-sm border border-[#F0DCCB]/60'
                                             : 'hover:bg-white/85'
                                     }`}
-                                    onClick={() => navigate(`/chat/${conversation.conversation_id}`)}
+                                    onClick={() => {
+                                        navigate(`/chat/${conversation.conversation_id}`);
+                                        onClose?.();
+                                    }}
                                 >
                                     <MessageSquare
                                         size={13}
@@ -224,7 +247,7 @@ function PreviousConversations() {
                             type="button"
                             variant="outline"
                             onClick={handleLogout}
-                            className="w-full flex items-center justify-center gap-2 rounded-xl bg-white border border-[#F0DCCB] py-2 h-auto text-sm font-medium text-[#A83A04] shadow-md shadow-orange-950/5 hover:bg-[#FFF4EC] hover:text-[#A83A04] transition-colors cursor-pointer"
+                            className="w-full min-h-11 lg:min-h-0 flex items-center justify-center gap-2 rounded-xl bg-white border border-[#F0DCCB] py-2 h-auto text-sm font-medium text-[#A83A04] shadow-md shadow-orange-950/5 hover:bg-[#FFF4EC] hover:text-[#A83A04] transition-colors cursor-pointer"
                         >
                             <LogOut size={16} />
                             Log out
@@ -235,7 +258,7 @@ function PreviousConversations() {
                 <button
                     type="button"
                     onClick={() => setShowLogout((prev) => !prev)}
-                    className="flex w-full items-center gap-2.5 min-w-0 text-left hover:bg-white/60 rounded-xl p-1 transition-colors cursor-pointer"
+                    className="flex w-full min-h-11 lg:min-h-0 items-center gap-2.5 min-w-0 text-left hover:bg-white/60 rounded-xl p-1 transition-colors cursor-pointer"
                 >
                     <Avatar className="h-8 w-8 shrink-0 rounded-full bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05] after:border-0 border-0">
                         <AvatarFallback className="bg-[#FDE0C8] font-serif text-sm font-medium text-[#7A2E05]">

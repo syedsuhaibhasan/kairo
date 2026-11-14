@@ -5,9 +5,7 @@ import DBService from '../supabase/config'
 import { useParams } from 'react-router-dom'
 import { Paperclip, ArrowUp, FileText, X } from 'lucide-react'
 import ChatMessage from '../components/ChatMessage'
-import { Avatar, AvatarFallback } from '../components/ui/avatar'
-import { Button } from '../components/ui/button'
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../components/ui/tooltip'
+import { TooltipProvider } from '../components/ui/tooltip'
 
 export default function Chat() {
   const [messages, setMessages] = useState([])
@@ -270,28 +268,37 @@ const handleSend = async (e) => {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex h-dvh flex-col">
+      <div className="flex h-[calc(100dvh-3.5rem)] lg:h-dvh flex-col">
         {/* Header */}
-        <header className="max-w-[824px] mx-auto w-full px-10 pt-6 pb-3">
-          <h1 className="font-serif text-[28px] text-[#2B1810] tracking-tight">{title}</h1>
+        <header className="max-w-[824px] mx-auto w-full px-4 sm:px-8 pt-4 sm:pt-6 pb-3">
+          <h1 className="font-serif text-xl sm:text-2xl text-[#2B1810] tracking-tight truncate">{title}</h1>
         </header>
 
         {/* Messages */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-4">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-8 pb-4">
           {(!messages || messages.length === 0) ? (
-            <div className="flex h-full items-center justify-center">
-              <p className="font-serif text-[#6F4636]">Start the conversation</p>
+            <div className="flex h-full flex-col items-center justify-center gap-3">
+              <img
+                src="/svg/kairo-mark.svg"
+                alt=""
+                className="h-10 sm:h-12 w-auto"
+                draggable={false}
+              />
+              <p className="font-serif text-[#6F4636] text-center">Start the conversation</p>
             </div>
           ) : (
             <div className="mx-auto max-w-[760px] flex flex-col gap-6">
-              {messages?.map((message) => (
-                <ChatMessage key={message.message_id || message.id || Math.random()} message={message} />
+              {messages?.map((message, index) => (
+                <ChatMessage key={message.message_id || message.id || index} message={message} />
               ))}
               {isSending && (
-                <div className="flex gap-3 items-center animate-in fade-in duration-300">
-                  <Avatar className="h-[30px] w-[30px] shrink-0 rounded-full bg-[#ff6b0f] font-serif text-lg text-white after:border-0 border-0 shadow-sm shadow-orange-900/10">
-                    <AvatarFallback className="bg-[#ff6b0f] text-white font-serif text-lg">k</AvatarFallback>
-                  </Avatar>
+                <div className="flex gap-2.5 sm:gap-3 items-center animate-in fade-in duration-300">
+                  <img
+                    src="/svg/kairo-icon.svg"
+                    alt=""
+                    className="size-7 sm:size-8 shrink-0"
+                    draggable={false}
+                  />
                   <div className="rounded-[6px_20px_20px_20px] border border-[#F0DCCB] bg-white/80 px-4 py-3 flex items-center gap-1.5 shadow-sm shadow-orange-950/5">
                     <span className="h-2 w-2 rounded-full bg-[#ff6b0f] animate-bounce [animation-delay:-0.3s]"></span>
                     <span className="h-2 w-2 rounded-full bg-[#ff6b0f] animate-bounce [animation-delay:-0.15s]"></span>
@@ -305,10 +312,10 @@ const handleSend = async (e) => {
         </div>
 
         {/* Composer */}
-        <div className="px-8 pb-1.5">
+        <div className="px-3 sm:px-8 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <form
             onSubmit={handleSend}
-            className="mx-auto max-w-[760px] rounded-3xl border border-[#F0DCCB]/90 bg-white/90 shadow-xl shadow-orange-950/10 p-[14px] transition-all focus-within:ring-2 focus-within:ring-[#ff6b0f]/20 focus-within:border-[#ff6b0f]/50"
+            className="mx-auto max-w-[760px] rounded-3xl border border-[#F0DCCB]/90 bg-white/90 shadow-xl shadow-orange-950/10 p-3 sm:p-[14px] transition-all focus-within:ring-2 focus-within:ring-[#ff6b0f]/20 focus-within:border-[#ff6b0f]/50"
           >
             {/* Hidden file input */}
             <input
@@ -360,7 +367,7 @@ const handleSend = async (e) => {
               aria-label="Message Kairo"
               rows={1}
               disabled={isSending}
-              className="w-full resize-none font-serif text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto disabled:opacity-60"
+              className="w-full resize-none font-serif text-base sm:text-[19px] text-[#2B1810] placeholder:text-[#7D5F4E] bg-transparent outline-none max-h-40 overflow-y-auto disabled:opacity-60"
             />
             <div className="flex items-center justify-between mt-2">
               <button
@@ -369,7 +376,7 @@ const handleSend = async (e) => {
                 disabled={isSending || isUploading}
                 title={isUploading ? "Uploading file..." : "Attach file (max 15MB)"}
                 aria-label="Attach file"
-                className="h-[38px] w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 w-11 sm:h-[38px] sm:w-[38px] rounded-xl border border-[#F0DCCB] bg-white hover:bg-[#FDF6F0] p-0 flex items-center justify-center cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 <Paperclip size={18} className="text-[#6F4636]" />
               </button>
@@ -380,7 +387,7 @@ const handleSend = async (e) => {
                 disabled={(!input.trim() && !attachedFile) || isSending || isUploading}
                 title="Send (Enter)"
                 aria-label="Send message"
-                className="h-[44px] w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed"
+                className="h-11 w-11 sm:h-[44px] sm:w-[44px] rounded-full bg-[#ff6b0f] text-white disabled:opacity-40 flex items-center justify-center p-0 cursor-pointer hover:brightness-105 active:scale-95 transition-all shadow-md shadow-orange-800/15 disabled:cursor-not-allowed shrink-0"
               >
                 <ArrowUp size={20} strokeWidth={2.5} />
               </button>
@@ -389,7 +396,7 @@ const handleSend = async (e) => {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-[#6F4636] py-2">
+        <p className="text-center text-[11px] sm:text-xs text-[#6F4636] py-1.5 px-4 text-balance">
           Kairo can make mistakes. Check important info.
         </p>
       </div>

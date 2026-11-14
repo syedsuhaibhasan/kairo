@@ -23,9 +23,9 @@ function AuthBackground({ children, variant = "login" }) {
       />
       <div
         aria-hidden="true"
-        className={`absolute -z-10 w-[85%] rounded-[50%] bg-white/25 blur-3xl ${styles.blob}`}
+        className={`absolute -z-10 w-[85%] rounded-[50%] bg-white/25 blur-3xl pointer-events-none ${styles.blob}`}
       />
-      <div className="relative">{children}</div>
+      <div className="relative w-full min-h-dvh flex flex-col">{children}</div>
     </div>
   )
 }
