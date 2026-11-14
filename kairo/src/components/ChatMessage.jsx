@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, RefreshCw, Check } from 'lucide-react'
+import { Copy, RefreshCw, Check, FileText } from 'lucide-react'
 import { Card } from './ui/card'
 import { Avatar, AvatarFallback } from './ui/avatar'
 import { Button } from './ui/button'
@@ -18,9 +18,27 @@ export default function ChatMessage({ message, onRegenerate }) {
   }
 
   if (message.role === 'user') {
+    const attachmentName =
+      message.attachment?.fileName ||
+      message.attachment?.name ||
+      (typeof message.attachment === 'string' ? message.attachment : null) ||
+      message.fileName ||
+      message.file_name ||
+      null
+
     return (
       <div className="self-end max-w-[70%] rounded-[20px_20px_6px_20px] bg-[#FFE0C7] border border-[#A83A04]/15 px-4 py-3 text-[15px] leading-[1.55] text-[#2B1810] shadow-sm shadow-orange-950/5 transition-all">
-        <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        {attachmentName && (
+          <div className="flex items-center gap-2 mb-2 p-1.5 px-3 rounded-xl bg-white/80 border border-[#A83A04]/20 w-fit max-w-full text-xs font-medium text-[#2B1810] shadow-xs">
+            <FileText size={15} className="text-[#ff6b0f] shrink-0" />
+            <span className="truncate max-w-[240px] sm:max-w-[360px]" title={attachmentName}>
+              {attachmentName}
+            </span>
+          </div>
+        )}
+        {message.content && (
+          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+        )}
       </div>
     )
   }
