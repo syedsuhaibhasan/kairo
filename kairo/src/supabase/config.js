@@ -23,7 +23,7 @@ async uploadDocument(user, file, conversationId) {
         if (error) {
             throw error;
         }
-
+ 
         return data;
 
     } catch (error) {

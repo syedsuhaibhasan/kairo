@@ -30,7 +30,7 @@ function Signup(){
             const data = await authService.signInWithGoogleToken(response.credential);
             if (data?.user) {
                 dispatch(setUser({userData: data.user}));
-                navigate('/');
+                navigate('/new-chat');
             }
         } catch (error) {
             setError(error.message);
