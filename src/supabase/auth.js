@@ -13,7 +13,7 @@ export class AuthService {
             const { data, error } = await this.client.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    emailRedirectTo: 'http://localhost:5173/'
+                    emailRedirectTo: 'https://kairo-nine-alpha.vercel.app/'
                 }
             })
             if (error) throw error;
