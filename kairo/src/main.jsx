@@ -10,6 +10,7 @@ import Signup from './pages/SignUp.jsx'
 import AppLayout from './components/AppLayout.jsx'
 import NewChat from './pages/NewChat.jsx'
 import Chat from './pages/Chat.jsx'
+import AuthLayout from './components/AuthLayout.jsx'
 
 const router = createBrowserRouter([
   {
@@ -18,22 +19,39 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: <Login />
+        element: (
+          <AuthLayout authentication={false}>
+            <Login />
+          </AuthLayout>
+        )
       },
       {
         path: '/signup',
-        element: <Signup />
+        element: (
+          <AuthLayout authentication={false}>
+            <Signup />
+          </AuthLayout>
+        )
       },
       {
-        element: <AppLayout />,
+        element: 
+        <AppLayout />,
         children: [
           {
             path: '/new-chat',
-            element: <NewChat />
+            element: (
+            <AuthLayout authentication={true}>
+              <NewChat />
+            </AuthLayout>
+            )
           },
           {
             path: '/chat/:conversation_id',
-            element: <Chat />
+            element: (
+              <AuthLayout authentication={true}>
+                  <Chat />
+              </AuthLayout>
+            )
           }
         ]
       }

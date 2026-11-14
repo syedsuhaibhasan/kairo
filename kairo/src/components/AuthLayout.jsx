@@ -23,7 +23,7 @@ export default function AuthLayout({ children, authentication = true }) {
         }
         // If this page is for unauthenticated users, but the user is authenticated, send them to /
          else if(!authentication && authStatus !== authentication){
-            navigate("/new-chat")
+            navigate("/")
         }
         setLoader(false)
     }, [authStatus, authentication, navigate])
