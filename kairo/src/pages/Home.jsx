@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Database, Layers, Smartphone, Bell, Palette } from 'lucide-react'
+import { ArrowRight, Check, Database, Layers, Smartphone, Bell, Palette } from 'lucide-react'
 
 // Change these if your route paths are different.
 const ROUTES = { chat: '/new-chat', login: '/login', signup: '/signup' }
@@ -23,7 +23,35 @@ const BACKEND = [
   { title: 'Switching models by input', text: 'Choosing the model automatically from what the user sends: text only, text with an image, or a document with text.' },
   { title: 'Documents without a parser model', text: 'Cohere handles the language side. Instead of adding a separate parsing model, which would be slower, I extract text from PDF, DOC and TXT files with third-party libraries and send only the text to the LLM.' },
   { title: 'Logging every AI request', text: 'Saving each call to the database with the model, token counts, latency and status, for debugging and cost tracking.' },
-  { title: 'Authentication and Row Level Security', text: 'Email and Google sign-in with Supabase, database tables for users, chats and messages, and policies so each user only sees their own data.' },
+]
+
+const AUTH_STEPS = ['Sign up with your email', 'Check your inbox', 'Verify the email', 'Signed in']
+
+const GUARD_RULES = [
+  {
+    who: 'Not signed in',
+    rules: [
+      { route: '/new-chat', allowed: false, result: 'Redirected to Login' },
+      { route: '/chat/:id', allowed: false, result: 'Redirected to Login' },
+      { route: '/login', allowed: true, result: 'Allowed' },
+    ],
+  },
+  {
+    who: 'Signed in',
+    rules: [
+      { route: '/login', allowed: false, result: 'Redirected to New chat' },
+      { route: '/signup', allowed: false, result: 'Redirected to New chat' },
+      { route: '/new-chat', allowed: true, result: 'Allowed' },
+    ],
+  },
+]
+
+const SECURITY = [
+  { title: 'Email-verified sign-up', text: 'New accounts must confirm their email before they can sign in, so nobody gets in with a random address.' },
+  { title: 'Redux in sync with Supabase Auth', text: 'Keeping the authSlice user state matched with the Supabase session on page load, login, logout and token refresh, so the UI never shows stale data.' },
+  { title: 'Route guards', text: 'An AuthGuard sends signed-out visitors to Login, and signed-in users straight to New chat so they can never open Login or Sign up.' },
+  { title: 'Secrets stay on the server', text: 'API keys and other secrets live in server-side Edge Functions and environment variables, never in the frontend code where anyone could read them.' },
+  { title: 'Row Level Security and database design', text: 'Tables for users, conversations, messages and logs, with policies so each user can only see their own data.' },
 ]
 
 const FRONTEND = [
@@ -35,8 +63,8 @@ const FRONTEND = [
 
 const STACK = [
   { label: 'Frontend', items: ['React', 'Vite', 'Tailwind CSS v4', 'shadcn/ui', 'React Router', 'Redux', 'Lucide icons', 'Sonner toasts'] },
-  { label: 'Backend and database', items: ['Supabase', 'PostgreSQL', 'Data API', 'Edge Functions', 'Row Level Security', 'Tables: users, conversations, messages, api_logs'] },
-  { label: 'Authentication', items: ['Supabase Auth (email and password)', 'Google Sign-In'] },
+  { label: 'Backend and database', items: ['Supabase', 'PostgreSQL', 'Data API', 'Edge Functions', 'Row Level Security', 'Server-side secrets', 'Tables: users, conversations, messages, api_logs'] },
+  { label: 'Authentication', items: ['Supabase Auth with email verification', 'Google Sign-In', 'Route guards', 'Redux authSlice synced with Supabase'] },
   { label: 'Storage', items: ['Supabase Storage buckets for file uploads'] },
   { label: 'AI', items: ['Cohere language model', 'Model chosen by input type', 'Text extraction libraries for PDF, DOC and TXT', 'API logs with tokens and latency'] },
   { label: 'Tooling and deployment', items: ['Bun', 'Git and GitHub', 'Vercel'] },
@@ -56,9 +84,15 @@ const btnOutline = `${btnBase} border-[#F0DCCB] bg-white hover:bg-[#FFF3EA]`
 const socialBtn =
   'inline-flex items-center gap-2 rounded-full border border-[#F0DCCB] bg-white/90 px-[18px] py-[11px] text-sm font-medium text-[#2B1810] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF6B0F] focus-visible:ring-offset-2'
 
+// Model routing chips (dark panel)
 const chipInput = 'inline-block rounded-lg border border-white/20 bg-white/10 px-3 py-[7px] text-[13px] text-[#FFF4EA]'
 const chipStep = 'inline-block rounded-lg border border-dashed border-[#FFB27A] px-3 py-[7px] text-[13px] text-[#FFB27A]'
 const chipModel = 'inline-block rounded-lg bg-[#FF6B0F] px-3 py-[7px] text-[13px] font-medium text-[#1A0F0A]'
+
+// Route guard chips (light panel)
+const chipRoute = 'rounded-lg bg-[#1A0F0A] px-3 py-[7px] font-mono text-[13px] text-[#FFF4EA]'
+const chipAllowed = 'inline-flex items-center gap-1.5 rounded-lg border border-[#F0DCCB] bg-white px-3 py-[7px] text-[13px] text-[#2B1810]'
+const chipRedirect = 'inline-flex items-center gap-1.5 rounded-lg border border-[#A83A04]/25 bg-[#FDE0C8] px-3 py-[7px] text-[13px] text-[#7A2E05]'
 
 function GithubIcon() {
   return (
@@ -79,13 +113,31 @@ function LinkedinIcon() {
   )
 }
 
-// Arrow between steps; the hidden text keeps the flow readable for screen readers.
-function Arrow() {
+// Arrow between items; the hidden text keeps the flow readable for screen readers.
+function Arrow({ className = 'text-[#FFB27A]', label = 'then' }) {
   return (
     <>
-      <ArrowRight className="size-[18px] text-[#FFB27A]" aria-hidden="true" />
-      <span className="sr-only">then</span>
+      <ArrowRight className={`size-[18px] ${className}`} aria-hidden="true" />
+      <span className="sr-only">{label}</span>
     </>
+  )
+}
+
+function NumberedList({ items }) {
+  return (
+    <ol className="mt-7 grid gap-x-12 md:grid-cols-2">
+      {items.map(({ title, text }, i) => (
+        <li key={title} className="flex gap-[18px] border-t border-[#F0DCCB] py-[22px]">
+          <span aria-hidden="true" className="w-11 shrink-0 font-serif text-[30px] leading-none text-[#A83A04]">
+            {String(i + 1).padStart(2, '0')}
+          </span>
+          <div>
+            <h4 className="mb-1.5 font-serif text-[22px] font-normal leading-tight">{title}</h4>
+            <p className="text-sm leading-relaxed text-[#6F4636]">{text}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
   )
 }
 
@@ -151,9 +203,9 @@ function Home() {
           </h2>
           <p className="mt-2.5 text-[15px] text-[#6F4636]">Lessons from building Kairo from scratch.</p>
 
+          {/* Backend and AI */}
           <h3 className="mt-14 font-serif text-[28px] font-normal leading-tight">Backend and AI</h3>
 
-          {/* Model routing panel */}
           <div className="mt-7 rounded-[28px] bg-[#1A0F0A] p-5 text-[#FFF4EA] sm:p-9">
             <div className="grid items-center gap-x-12 gap-y-7 lg:grid-cols-2">
               <div>
@@ -187,21 +239,65 @@ function Home() {
             </div>
           </div>
 
-          {/* Numbered backend lessons */}
-          <ol className="mt-7 grid gap-x-12 md:grid-cols-2">
-            {BACKEND.map(({ title, text }, i) => (
-              <li key={title} className="flex gap-[18px] border-t border-[#F0DCCB] py-[22px]">
-                <span aria-hidden="true" className="w-11 shrink-0 font-serif text-[30px] leading-none text-[#A83A04]">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-                <div>
-                  <h4 className="mb-1.5 font-serif text-[22px] font-normal leading-tight">{title}</h4>
-                  <p className="text-sm leading-relaxed text-[#6F4636]">{text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <NumberedList items={BACKEND} />
 
+          {/* Authentication and security */}
+          <h3 className="mt-14 font-serif text-[28px] font-normal leading-tight">Authentication and security</h3>
+
+          <div className="mt-7 rounded-[28px] border border-[#F0DCCB] bg-white/80 p-5 sm:p-9">
+            <div className="grid items-center gap-x-12 gap-y-7 lg:grid-cols-2">
+              <div>
+                <p className="text-[13px] text-[#6F4636]">How access is controlled</p>
+                <h4 className="mt-2.5 font-serif text-[clamp(26px,3.4vw,34px)] font-normal leading-[1.15]">
+                  Verified, synced and guarded
+                </h4>
+                <p className="mt-3.5 text-[15px] leading-relaxed text-[#6F4636]">
+                  New users must verify their email first. The Redux user state stays in sync with the Supabase session, and route guards decide which pages each visitor can open.
+                </p>
+              </div>
+              <ol className="flex flex-col gap-3.5">
+                {AUTH_STEPS.map((step, i) => (
+                  <li key={step} className="flex items-center gap-3">
+                    <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full bg-[#FF6B0F] text-[13px] font-medium text-[#1A0F0A]">
+                      {i + 1}
+                    </span>
+                    <span className="text-[15px]">{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="mt-7 grid gap-x-8 gap-y-6 border-t border-[#F0DCCB] pt-6 md:grid-cols-2">
+              {GUARD_RULES.map(({ who, rules }) => (
+                <div key={who}>
+                  <h5 className="text-sm font-medium">{who}</h5>
+                  <ul className="mt-3 flex flex-col gap-2.5">
+                    {rules.map(({ route, allowed, result }) => (
+                      <li key={route} className="flex flex-wrap items-center gap-2.5">
+                        <code className={chipRoute}>{route}</code>
+                        <Arrow className="text-[#A83A04]" label="leads to" />
+                        {allowed ? (
+                          <span className={chipAllowed}>
+                            <Check className="size-3.5" aria-hidden="true" />
+                            {result}
+                          </span>
+                        ) : (
+                          <span className={chipRedirect}>
+                            <ArrowRight className="size-3.5" aria-hidden="true" />
+                            {result}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <NumberedList items={SECURITY} />
+
+          {/* Frontend and product */}
           <h3 className="mt-14 font-serif text-[28px] font-normal leading-tight">Frontend and product</h3>
           <ul className="mt-6 grid gap-4 md:grid-cols-2">
             {FRONTEND.map(({ icon: Icon, title, text }) => (
